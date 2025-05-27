@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
 const ShopList = () => {
-  // sessionStorage වෙතින් user සහ token ලබාගැනීම සඳහා state භාවිතා කරමු
   const [currentUser, setCurrentUser] = useState(null);
   const [currentToken, setCurrentToken] = useState(null);
 
@@ -14,9 +13,9 @@ const ShopList = () => {
   useEffect(() => {
     const updateSessionUserAndToken = () => {
       try {
-        const storedUser = sessionStorage.getItem("user"); // ✅ sessionStorage
-        const storedToken = sessionStorage.getItem("token"); // ✅ sessionStorage
-        
+        const storedUser = sessionStorage.getItem("user");
+        const storedToken = sessionStorage.getItem("token");
+
         setCurrentUser(storedUser ? JSON.parse(storedUser) : null);
         setCurrentToken(storedToken);
       } catch (e) {
@@ -26,19 +25,10 @@ const ShopList = () => {
       }
     };
 
-    updateSessionUserAndToken(); // මුලින්ම load කරගන්න
-
-    // Note: sessionStorage tab-specific නිසා 'storage' event එක වැඩ කරන්නේ නැහැ.
-    // ඔබට tabs අතර sync කරන්න ඕනිනම්, localStorage හෝ වෙනත් ක්‍රමයක් භාවිතා කරන්න වෙනවා.
-    // නමුත් ඔබේ ප්‍රශ්නයට අනුව, tab-specific session අවශ්‍යයි.
-    // ඒ නිසා window.addEventListener('storage', ...) මෙතන අවශ්‍ය නැහැ.
-
-    // මෙම useEffect එකෙන් දත්ත load කරන්නේ mount එකේදී පමණයි.
-    // refresh හෝ back කරන විට, session storage එකෙන් අලුතින් load වෙනවා.
+    updateSessionUserAndToken();
   }, []);
 
   // currentUser හෝ currentToken වෙනස් වූ විට shops නැවත fetch කිරීමට
-  // මෙය browser reload/back කරන විටත්, login/logout වැනි දේ සිදුවූ විටත් ක්‍රියාත්මක වේ.
   useEffect(() => {
     if (currentToken) {
       fetchShops(currentUser, currentToken);
@@ -60,7 +50,7 @@ const ShopList = () => {
         res = await axios.get("http://localhost:5000/api/shops/my", {
           headers: { Authorization: `Bearer ${token}` },
         });
-      } else {
+      } else { // This means it's a 'user' role or no specific role, hence 'all' shops
         res = await axios.get("http://localhost:5000/api/shops/all", {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -69,22 +59,22 @@ const ShopList = () => {
     } catch (err) {
       console.error("Error fetching shops:", err);
       if (err.response) {
-          console.error("Response data:", err.response.data);
-          console.error("Response status:", err.response.status);
+        console.error("Response data:", err.response.data);
+        console.error("Response status:", err.response.status);
       } else if (err.request) {
-          console.error("No response received:", err.request);
+        console.error("No response received:", err.request);
       } else {
-          console.error("Error setting up request:", err.message);
+        console.error("Error setting up request:", err.message);
       }
       if (err.response?.status === 401 || err.response?.status === 403) {
-          alert("Session expired or unauthorized. Please log in again.");
-          sessionStorage.removeItem("token"); // ✅ sessionStorage
-          sessionStorage.removeItem("user"); // ✅ sessionStorage
-          setCurrentUser(null);
-          setCurrentToken(null);
-          // window.location.href = '/login'; // Optional: Redirect to login
+        alert("Session expired or unauthorized. Please log in again.");
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("user");
+        setCurrentUser(null);
+        setCurrentToken(null);
+        // window.location.href = '/login'; // Optional: Redirect to login
       } else {
-          alert("Failed to fetch shops. Please check console for more details.");
+        alert("Failed to fetch shops. Please check console for more details.");
       }
     }
   };
@@ -99,15 +89,15 @@ const ShopList = () => {
       await axios.delete(`http://localhost:5000/api/shops/${id}`, {
         headers: { Authorization: `Bearer ${currentToken}` },
       });
-      fetchShops(currentUser, currentToken);
+      fetchShops(currentUser, currentToken); // Re-fetch shops after deletion
     } catch (err) {
       console.error("Delete error:", err);
       if (err.response) {
-          console.error("Response data:", err.response.data);
-          console.error("Response status:", err.response.status);
-          alert("Failed to delete shop: " + (err.response.data.error || err.response.data.msg || "Unknown error"));
+        console.error("Response data:", err.response.data);
+        console.error("Response status:", err.response.status);
+        alert("Failed to delete shop: " + (err.response.data.error || err.response.data.msg || "Unknown error"));
       } else {
-          alert("Failed to delete shop. Check console.");
+        alert("Failed to delete shop. Check console.");
       }
     }
   };
@@ -127,15 +117,15 @@ const ShopList = () => {
         headers: { Authorization: `Bearer ${currentToken}` },
       });
       setEditingShop(null);
-      fetchShops(currentUser, currentToken);
+      fetchShops(currentUser, currentToken); // Re-fetch shops after update
     } catch (err) {
       console.error("Update error:", err);
       if (err.response) {
-          console.error("Response data:", err.response.data);
-          console.error("Response status:", err.response.status);
-          alert("Failed to update shop: " + (err.response.data.error || err.response.data.msg || "Unknown error"));
+        console.error("Response data:", err.response.data);
+        console.error("Response status:", err.response.status);
+        alert("Failed to update shop: " + (err.response.data.error || err.response.data.msg || "Unknown error"));
       } else {
-          alert("Failed to update shop. Check console.");
+        alert("Failed to update shop. Check console.");
       }
     }
   };
@@ -181,7 +171,7 @@ const ShopList = () => {
                   <h5 className="card-title">{shop.shopName}</h5>
                   <p><strong>Location:</strong> {shop.location || 'N/A'}</p>
                   {shop.owner && <p><strong>Owner:</strong> {shop.owner.name} ({shop.owner.email})</p>}
-                  
+
                   <p className="card-text">Menu:</p>
                   <ul>
                     {shop.menuItems && shop.menuItems.length > 0 ? (
@@ -194,7 +184,7 @@ const ShopList = () => {
                       <li>No menu items available.</li>
                     )}
                   </ul>
-                  
+
                   {currentUser?.role === 'owner' && (
                     <>
                       <button onClick={() => handleEditClick(shop)} className="btn btn-primary btn-sm me-2">

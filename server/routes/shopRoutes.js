@@ -1,21 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const shopController = require('../controllers/shopController');
-const authMiddleware = require('../middleware/auth');
+const auth = require('../middleware/auth'); // Use 'auth' consistently for the middleware
 
-// Get all shops (accessible to any authenticated user - user or owner)
-router.get('/all', authMiddleware, shopController.getAllShops);
+// POST - Add new shop (owners only)
+router.post('/', auth, shopController.addShop); // Path was '/api/shops' but handled by app.use('/api/shops', shopRoutes)
 
-// Get shops for the current owner (only for 'owner' role)
-router.get('/my', authMiddleware, shopController.getMyShops);
+// GET - All shops (users only)
+router.get('/all', auth, shopController.getAllShops); // Path was '/api/shops/all'
 
-// Add a new shop (only for 'owner' role)
-router.post('/', authMiddleware, shopController.addShop);
+// GET - Owner's shops
+router.get('/my', auth, shopController.getMyShops); // Path was '/api/shops/my'
 
-// Update a shop (only for 'owner' role, and only their own shop)
-router.put('/:id', authMiddleware, shopController.updateShop);
+// PUT - Update shop (owners only, and only their shops)
+router.put('/:id', auth, shopController.updateShop); // Path was '/api/shops/:id'
 
-// Delete a shop (only for 'owner' role, and only their own shop)
-router.delete('/:id', authMiddleware, shopController.deleteShop);
+// DELETE - Delete shop (owners only, and only their shops)
+router.delete('/:id', auth, shopController.deleteShop); // Path was '/api/shops/:id'
 
 module.exports = router;

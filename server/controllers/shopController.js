@@ -18,15 +18,11 @@ exports.getAllShops = async (req, res) => {
 // Get shops for the logged-in owner
 exports.getMyShops = async (req, res) => {
   try {
-    if (req.user.role !== 'owner') {
-      return res.status(403).json({ msg: 'Only shop owners can view their shops.' });
-    }
-
-    const shops = await Shop.find({ owner: req.user._id }).populate('owner', 'name email');
-    res.json(shops);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: 'Server error.' });
+    const myShops = await Shop.find({ owner: req.user._id });
+    res.status(200).json(myShops);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: 'Failed to fetch your shops' });
   }
 };
 
@@ -37,16 +33,29 @@ exports.addShop = async (req, res) => {
       return res.status(403).json({ msg: 'Only owners can add shops.' });
     }
 
+    const { shopName, location, menuItems } = req.body;
+
+    if (!shopName || !Array.isArray(menuItems)) {
+      return res.status(400).json({ msg: 'Invalid input. shopName and menuItems are required.' });
+    }
+
     const newShop = new Shop({
-      shopName: req.body.shopName,
-      location: req.body.location,
+      shopName,
+      location: location || 'N/A',
       owner: req.user._id,
+      menuItems: menuItems.map(item => ({
+        name: item.name,
+        price: item.price,
+        breakfastQty: item.breakfastQty || 0,
+        lunchQty: item.lunchQty || 0,
+        dinnerQty: item.dinnerQty || 0,
+      }))
     });
 
     await newShop.save();
     res.status(201).json(newShop);
   } catch (err) {
-    console.error(err);
+    console.error('Error in addShop:', err);
     res.status(500).json({ msg: 'Server error.' });
   }
 };

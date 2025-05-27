@@ -1,11 +1,12 @@
+// AuthForm.js
 import React, { useState } from 'react';
 import axios from 'axios';
 import { FaUser, FaEnvelope, FaLock, FaStore } from 'react-icons/fa';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom'; // <-- ADD THIS
+import { useNavigate } from 'react-router-dom';
 
 const AuthForm = () => {
-  const navigate = useNavigate(); // <-- INIT HERE
+  const navigate = useNavigate();
   const [isRegister, setIsRegister] = useState(true);
   const [form, setForm] = useState({
     name: '',
@@ -31,7 +32,6 @@ const AuthForm = () => {
         sessionStorage.setItem('user', JSON.stringify(res.data.user));
         sessionStorage.setItem('token', res.data.token);
 
-        // ✅ useNavigate to redirect without reload
         if (res.data.user.role === 'owner') {
           navigate('/owner-home');
         } else {
@@ -45,6 +45,7 @@ const AuthForm = () => {
     }
   };
 
+  // ... The rest of the JSX is unchanged ...
   return (
     <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
       <motion.div
@@ -77,72 +78,34 @@ const AuthForm = () => {
           </div>
         </div>
 
-       <form onSubmit={handleSubmit}>
-  {isRegister && (
-    <>
-      <div className="mb-3">
-        <label htmlFor="name" className="form-label">
-          <FaUser className="me-2" /> Name
-        </label>
-        <input
-          id="name"
-          name="name"
-          className="form-control"
-          autoComplete="name"
-          onChange={handleChange}
-          required
-        />
-      </div>
-      <div className="mb-3">
-        <label htmlFor="role" className="form-label">
-          <FaStore className="me-2" /> Role
-        </label>
-        <select
-          id="role"
-          name="role"
-          className="form-select"
-          onChange={handleChange}
-          autoComplete="off"
-        >
-          <option value="user">Normal User</option>
-          <option value="owner">Shop Owner</option>
-        </select>
-      </div>
-    </>
-  )}
-  <div className="mb-3">
-    <label htmlFor="email" className="form-label">
-      <FaEnvelope className="me-2" /> Email
-    </label>
-    <input
-      id="email"
-      type="email"
-      name="email"
-      className="form-control"
-      autoComplete="email"
-      onChange={handleChange}
-      required
-    />
-  </div>
-  <div className="mb-4">
-    <label htmlFor="password" className="form-label">
-      <FaLock className="me-2" /> Password
-    </label>
-    <input
-      id="password"
-      type="password"
-      name="password"
-      className="form-control"
-      autoComplete={isRegister ? 'new-password' : 'current-password'}
-      onChange={handleChange}
-      required
-    />
-  </div>
-  <button type="submit" className="btn btn-success w-100">
-    {isRegister ? 'Register' : 'Login'}
-  </button>
-</form>
-
+        <form onSubmit={handleSubmit}>
+          {isRegister && (
+            <>
+              <div className="mb-3">
+                <label htmlFor="name" className="form-label"><FaUser className="me-2" /> Name</label>
+                <input id="name" name="name" className="form-control" autoComplete="name" onChange={handleChange} required />
+              </div>
+              <div className="mb-3">
+                <label htmlFor="role" className="form-label"><FaStore className="me-2" /> Role</label>
+                <select id="role" name="role" className="form-select" onChange={handleChange} value={form.role}>
+                  <option value="user">Normal User</option>
+                  <option value="owner">Shop Owner</option>
+                </select>
+              </div>
+            </>
+          )}
+          <div className="mb-3">
+            <label htmlFor="email" className="form-label"><FaEnvelope className="me-2" /> Email</label>
+            <input id="email" type="email" name="email" className="form-control" autoComplete="email" onChange={handleChange} required />
+          </div>
+          <div className="mb-4">
+            <label htmlFor="password" className="form-label"><FaLock className="me-2" /> Password</label>
+            <input id="password" type="password" name="password" className="form-control" autoComplete={isRegister ? 'new-password' : 'current-password'} onChange={handleChange} required />
+          </div>
+          <button type="submit" className="btn btn-success w-100">
+            {isRegister ? 'Register' : 'Login'}
+          </button>
+        </form>
       </motion.div>
     </div>
   );

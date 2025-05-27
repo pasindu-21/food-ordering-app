@@ -1,3 +1,4 @@
+// models/Shop.js
 const mongoose = require('mongoose');
 
 const menuItemSchema = new mongoose.Schema({
@@ -9,10 +10,10 @@ const menuItemSchema = new mongoose.Schema({
 });
 
 const shopSchema = new mongoose.Schema({
-  shopName: { type: String, required: true }, // Changed from 'name' to 'shopName'
+  shopName: { type: String, required: true },
   location: { type: String, default: 'N/A' },
   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  menuItems: [menuItemSchema] // Array of menu items
+  menuItems: [menuItemSchema],
 }, { timestamps: true });
 
 module.exports = mongoose.model('Shop', shopSchema);

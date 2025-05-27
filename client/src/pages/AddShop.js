@@ -15,22 +15,28 @@ const AddShop = () => {
   };
 
   const handleChangeItem = (index, field, value) => {
-    const items = [...menuItems];
-    items[index][field] = value;
-    setMenuItems(items);
+    const updatedItems = [...menuItems];
+    updatedItems[index][field] = value;
+    setMenuItems(updatedItems);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
+
+    // ✅ Get token from sessionStorage
+    const token = sessionStorage.getItem('token');
+    if (!token) {
+      alert("ඔබ login වී නැහැ හෝ token එක කල් ඉකුත් වී ඇත.");
+      return;
+    }
 
     try {
       await axios.post(
         'http://localhost:5000/api/shops',
         {
-          shopName,
+          shopName: shopName,
           menuItems: menuItems.map((item) => ({
-            ...item,
+            name: item.name,
             price: Number(item.price),
             breakfastQty: Number(item.breakfastQty || 0),
             lunchQty: Number(item.lunchQty || 0),
@@ -40,18 +46,27 @@ const AddShop = () => {
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
           },
         }
       );
 
-      alert('Shop added successfully!');
+      alert('Shop එක සාර්ථකව ඇතුළත් විය!');
       setShopName('');
-      setMenuItems([
-        { name: '', price: '', breakfastQty: '', lunchQty: '', dinnerQty: '' },
-      ]);
+      setMenuItems([{ name: '', price: '', breakfastQty: '', lunchQty: '', dinnerQty: '' }]);
     } catch (err) {
-      console.error('Error adding shop:', err);
-      alert('Failed to add shop');
+      console.error('Error:', err);
+      if (err.response?.status === 403) {
+        alert('Shop එක add කිරීම සඳහා ඔබට අවසර නැහැ.');
+      } else if (err.response?.status === 401) {
+        alert("ඔබගේ session එක කල් ඉකුත් වී ඇත. නැවත login වන්න.");
+        sessionStorage.removeItem('user');
+        sessionStorage.removeItem('token');
+        // You might want to redirect to login page here
+        // window.location.href = '/login';
+      } else {
+        alert('Shop එක add කිරීම අසාර්ථක විය.');
+      }
     }
   };
 
@@ -60,7 +75,7 @@ const AddShop = () => {
       <h3>Add New Shop</h3>
       <form onSubmit={handleSubmit}>
         <div className="mb-3">
-          <label>Shop Name</label>
+          <label className="form-label">Shop Name</label>
           <input
             type="text"
             className="form-control"
@@ -73,7 +88,7 @@ const AddShop = () => {
         <h5>Menu Items</h5>
         {menuItems.map((item, index) => (
           <div key={index} className="border p-3 mb-3 rounded bg-light">
-            <div className="row">
+            <div className="row g-2">
               <div className="col-md-3">
                 <input
                   type="text"
@@ -125,11 +140,11 @@ const AddShop = () => {
           </div>
         ))}
 
-        <button type="button" className="btn btn-secondary" onClick={handleAddItem}>
+        <button type="button" className="btn btn-secondary me-2" onClick={handleAddItem}>
           Add More
         </button>
 
-        <button type="submit" className="btn btn-success mt-3 d-block">
+        <button type="submit" className="btn btn-success mt-3">
           Save Shop
         </button>
       </form>
