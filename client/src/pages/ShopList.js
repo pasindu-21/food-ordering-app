@@ -1,133 +1,134 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import OrderForm from './OrderForm';
 
 const ShopList = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [currentToken, setCurrentToken] = useState(null);
-
   const [shops, setShops] = useState([]);
   const [editingShop, setEditingShop] = useState(null);
   const [formData, setFormData] = useState({ shopName: '', location: '' });
+  const [editingMenuItem, setEditingMenuItem] = useState(null);
+  const [menuEditData, setMenuEditData] = useState({});
+  const [showOrderForm, setShowOrderForm] = useState(null);
+  const [newMenuItem, setNewMenuItem] = useState({
+    name: '',
+    price: '',
+    breakfastQty: '',
+    lunchQty: '',
+    dinnerQty: ''
+  });
 
-  // Component mount වන විට දත්ත sessionStorage වෙතින් ලබාගැනීම
   useEffect(() => {
-    const updateSessionUserAndToken = () => {
-      try {
-        const storedUser = sessionStorage.getItem("user");
-        const storedToken = sessionStorage.getItem("token");
-
-        setCurrentUser(storedUser ? JSON.parse(storedUser) : null);
-        setCurrentToken(storedToken);
-      } catch (e) {
-        console.error("Failed to parse user from sessionStorage", e);
-        setCurrentUser(null);
-        setCurrentToken(null);
-      }
-    };
-
-    updateSessionUserAndToken();
+    const storedUser = sessionStorage.getItem("user");
+    const storedToken = sessionStorage.getItem("token");
+    setCurrentUser(storedUser ? JSON.parse(storedUser) : null);
+    setCurrentToken(storedToken);
   }, []);
 
-  // currentUser හෝ currentToken වෙනස් වූ විට shops නැවත fetch කිරීමට
   useEffect(() => {
     if (currentToken) {
-      fetchShops(currentUser, currentToken);
+      fetchShops();
     } else {
-      setShops([]); // Token එකක් නැතිනම් shops හිස් කරන්න
-    }
-  }, [currentUser, currentToken]);
-
-  const fetchShops = async (user, token) => {
-    if (!token) {
-      console.log("No token available to fetch shops.");
       setShops([]);
-      return;
     }
+    // eslint-disable-next-line
+  }, [currentToken]);
 
+  const fetchShops = async () => {
+    if (!currentToken) return;
     try {
       let res;
-      if (user?.role === "owner") {
+      if (currentUser?.role === "owner") {
         res = await axios.get("http://localhost:5000/api/shops/my", {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${currentToken}` },
         });
-      } else { // This means it's a 'user' role or no specific role, hence 'all' shops
+      } else {
         res = await axios.get("http://localhost:5000/api/shops/all", {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${currentToken}` },
         });
       }
       setShops(res.data);
     } catch (err) {
-      console.error("Error fetching shops:", err);
-      if (err.response) {
-        console.error("Response data:", err.response.data);
-        console.error("Response status:", err.response.status);
-      } else if (err.request) {
-        console.error("No response received:", err.request);
-      } else {
-        console.error("Error setting up request:", err.message);
-      }
-      if (err.response?.status === 401 || err.response?.status === 403) {
-        alert("Session expired or unauthorized. Please log in again.");
-        sessionStorage.removeItem("token");
-        sessionStorage.removeItem("user");
-        setCurrentUser(null);
-        setCurrentToken(null);
-        // window.location.href = '/login'; // Optional: Redirect to login
-      } else {
-        alert("Failed to fetch shops. Please check console for more details.");
-      }
+      setShops([]);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this shop?")) return;
-    if (!currentToken) {
-      alert("Please log in to delete shops.");
-      return;
-    }
-    try {
-      await axios.delete(`http://localhost:5000/api/shops/${id}`, {
-        headers: { Authorization: `Bearer ${currentToken}` },
-      });
-      fetchShops(currentUser, currentToken); // Re-fetch shops after deletion
-    } catch (err) {
-      console.error("Delete error:", err);
-      if (err.response) {
-        console.error("Response data:", err.response.data);
-        console.error("Response status:", err.response.status);
-        alert("Failed to delete shop: " + (err.response.data.error || err.response.data.msg || "Unknown error"));
-      } else {
-        alert("Failed to delete shop. Check console.");
-      }
-    }
-  };
-
+  // Shop name/location edit
   const handleEditClick = (shop) => {
     setEditingShop(shop._id);
     setFormData({ shopName: shop.shopName, location: shop.location || '' });
+    setEditingMenuItem(null);
   };
 
   const handleEditSave = async () => {
-    if (!currentToken) {
-      alert("Please log in to update shops.");
-      return;
-    }
-    try {
-      await axios.put(`http://localhost:5000/api/shops/${editingShop}`, formData, {
-        headers: { Authorization: `Bearer ${currentToken}` },
-      });
-      setEditingShop(null);
-      fetchShops(currentUser, currentToken); // Re-fetch shops after update
-    } catch (err) {
-      console.error("Update error:", err);
-      if (err.response) {
-        console.error("Response data:", err.response.data);
-        console.error("Response status:", err.response.status);
-        alert("Failed to update shop: " + (err.response.data.error || err.response.data.msg || "Unknown error"));
-      } else {
-        alert("Failed to update shop. Check console.");
+    await axios.put(`http://localhost:5000/api/shops/${editingShop}`, formData, {
+      headers: { Authorization: `Bearer ${currentToken}` },
+    });
+    setEditingShop(null);
+    fetchShops();
+  };
+
+  // Menu item edit
+  const handleMenuItemEdit = (item) => {
+    setEditingMenuItem(item._id);
+    setMenuEditData({ ...item });
+  };
+
+  const handleMenuItemSave = async (shopId) => {
+    await axios.put(`http://localhost:5000/api/shops/${shopId}`, {
+      menuItemUpdate: {
+        itemId: editingMenuItem,
+        ...menuEditData
       }
-    }
+    }, {
+      headers: { Authorization: `Bearer ${currentToken}` }
+    });
+    setEditingMenuItem(null);
+    setMenuEditData({});
+    fetchShops();
+  };
+
+  // Menu item delete
+  const handleMenuItemDelete = async (shopId, itemId) => {
+    await axios.put(`http://localhost:5000/api/shops/${shopId}`, {
+      menuItemDeleteId: itemId
+    }, {
+      headers: { Authorization: `Bearer ${currentToken}` }
+    });
+    setEditingMenuItem(null);
+    setMenuEditData({});
+    fetchShops();
+  };
+
+  // Add new menu item
+  const handleAddMenuItem = async (shop) => {
+    const updatedMenu = [
+      ...shop.menuItems,
+      {
+        name: newMenuItem.name,
+        price: Number(newMenuItem.price),
+        breakfastQty: Number(newMenuItem.breakfastQty || 0),
+        lunchQty: Number(newMenuItem.lunchQty || 0),
+        dinnerQty: Number(newMenuItem.dinnerQty || 0)
+      }
+    ];
+    await axios.put(`http://localhost:5000/api/shops/${shop._id}`, {
+      menuItems: updatedMenu
+    }, {
+      headers: { Authorization: `Bearer ${currentToken}` }
+    });
+    setNewMenuItem({ name: '', price: '', breakfastQty: '', lunchQty: '', dinnerQty: '' });
+    fetchShops();
+  };
+
+  // Shop delete
+  const handleDeleteShop = async (shopId) => {
+    if (!window.confirm("Are you sure you want to delete this shop?")) return;
+    await axios.delete(`http://localhost:5000/api/shops/${shopId}`, {
+      headers: { Authorization: `Bearer ${currentToken}` }
+    });
+    fetchShops();
   };
 
   const handleFormChange = (e) => {
@@ -144,7 +145,7 @@ const ShopList = () => {
           <div key={shop._id} className="card mb-3">
             <div className="card-body">
               {editingShop === shop._id ? (
-                // Edit Mode
+                // Edit Shop name/location
                 <>
                   <input
                     type="text"
@@ -166,32 +167,139 @@ const ShopList = () => {
                   <button onClick={() => setEditingShop(null)} className="btn btn-secondary btn-sm">Cancel</button>
                 </>
               ) : (
-                // Display Mode
                 <>
                   <h5 className="card-title">{shop.shopName}</h5>
                   <p><strong>Location:</strong> {shop.location || 'N/A'}</p>
                   {shop.owner && <p><strong>Owner:</strong> {shop.owner.name} ({shop.owner.email})</p>}
-
                   <p className="card-text">Menu:</p>
                   <ul>
                     {shop.menuItems && shop.menuItems.length > 0 ? (
-                      shop.menuItems.map((item, index) => (
-                        <li key={index}>
-                          🍽 {item.name} - Rs.{item.price} (B:{item.breakfastQty}, L:{item.lunchQty}, D:{item.dinnerQty})
+                      shop.menuItems.map((item) => (
+                        <li key={item._id}>
+                          {editingMenuItem === item._id ? (
+                            <>
+                              <input
+                                type="text"
+                                value={menuEditData.name}
+                                onChange={e => setMenuEditData({ ...menuEditData, name: e.target.value })}
+                                style={{ width: '100px' }}
+                              />
+                              <input
+                                type="number"
+                                value={menuEditData.price}
+                                onChange={e => setMenuEditData({ ...menuEditData, price: e.target.value })}
+                                style={{ width: '70px' }}
+                              />
+                              <input
+                                type="number"
+                                value={menuEditData.breakfastQty}
+                                onChange={e => setMenuEditData({ ...menuEditData, breakfastQty: e.target.value })}
+                                style={{ width: '70px' }}
+                              />
+                              <input
+                                type="number"
+                                value={menuEditData.lunchQty}
+                                onChange={e => setMenuEditData({ ...menuEditData, lunchQty: e.target.value })}
+                                style={{ width: '70px' }}
+                              />
+                              <input
+                                type="number"
+                                value={menuEditData.dinnerQty}
+                                onChange={e => setMenuEditData({ ...menuEditData, dinnerQty: e.target.value })}
+                                style={{ width: '70px' }}
+                              />
+                              <button className="btn btn-success btn-sm me-2" onClick={() => handleMenuItemSave(shop._id)}>Save</button>
+                              <button className="btn btn-secondary btn-sm" onClick={() => setEditingMenuItem(null)}>Cancel</button>
+                            </>
+                          ) : (
+                            <>
+                              🍽 {item.name} - Rs.{item.price} (B:{item.breakfastQty}, L:{item.lunchQty}, D:{item.dinnerQty})
+                              {currentUser?.role === 'owner' && (
+                                <>
+                                  <button className="btn btn-primary btn-sm me-2" onClick={() => handleMenuItemEdit(item)}>Edit</button>
+                                  <button className="btn btn-danger btn-sm" onClick={() => handleMenuItemDelete(shop._id, item._id)}>Delete</button>
+                                </>
+                              )}
+                            </>
+                          )}
                         </li>
                       ))
                     ) : (
                       <li>No menu items available.</li>
                     )}
                   </ul>
-
+                  {/* Add new menu item form */}
+                  {currentUser?.role === 'owner' && (
+                    <form
+                      onSubmit={e => {
+                        e.preventDefault();
+                        handleAddMenuItem(shop);
+                      }}
+                      className="mb-3"
+                      style={{ display: 'flex', gap: '5px', alignItems: 'center' }}
+                    >
+                      <input
+                        type="text"
+                        placeholder="Item Name"
+                        value={newMenuItem.name}
+                        onChange={e => setNewMenuItem({ ...newMenuItem, name: e.target.value })}
+                        required
+                        style={{ width: '100px' }}
+                      />
+                      <input
+                        type="number"
+                        placeholder="Price"
+                        value={newMenuItem.price}
+                        onChange={e => setNewMenuItem({ ...newMenuItem, price: e.target.value })}
+                        required
+                        style={{ width: '70px' }}
+                      />
+                      <input
+                        type="number"
+                        placeholder="B.Qty"
+                        value={newMenuItem.breakfastQty}
+                        onChange={e => setNewMenuItem({ ...newMenuItem, breakfastQty: e.target.value })}
+                        style={{ width: '60px' }}
+                      />
+                      <input
+                        type="number"
+                        placeholder="L.Qty"
+                        value={newMenuItem.lunchQty}
+                        onChange={e => setNewMenuItem({ ...newMenuItem, lunchQty: e.target.value })}
+                        style={{ width: '60px' }}
+                      />
+                      <input
+                        type="number"
+                        placeholder="D.Qty"
+                        value={newMenuItem.dinnerQty}
+                        onChange={e => setNewMenuItem({ ...newMenuItem, dinnerQty: e.target.value })}
+                        style={{ width: '60px' }}
+                      />
+                      <button className="btn btn-success btn-sm" type="submit">Add Item</button>
+                    </form>
+                  )}
+                  {/* User Order Button & OrderForm */}
+                  {currentUser?.role === 'user' && (
+                    <>
+                      <button
+                        className="btn btn-success btn-sm"
+                        onClick={() => setShowOrderForm(shop)}
+                      >
+                        Order
+                      </button>
+                      {showOrderForm && showOrderForm._id === shop._id && (
+                        <OrderForm shop={shop} onOrderPlaced={() => setShowOrderForm(null)} />
+                      )}
+                    </>
+                  )}
+                  {/* Owner: Shop Edit/Delete */}
                   {currentUser?.role === 'owner' && (
                     <>
                       <button onClick={() => handleEditClick(shop)} className="btn btn-primary btn-sm me-2">
-                        Edit
+                        Edit Shop
                       </button>
-                      <button onClick={() => handleDelete(shop._id)} className="btn btn-danger btn-sm">
-                        Delete
+                      <button onClick={() => handleDeleteShop(shop._id)} className="btn btn-danger btn-sm">
+                        Delete Shop
                       </button>
                     </>
                   )}

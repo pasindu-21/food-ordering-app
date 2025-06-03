@@ -2,24 +2,22 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
-
 const authRoutes = require('./routes/auth');
-const shopRoutes = require('./routes/shopRoutes'); // <-- Changed 'shoproute' to 'shopRoutes' // Corrected import name to match file
+const shopRoutes = require('./routes/shopRoutes');
+const orderRoutes = require('./routes/orderRoutes'); // <-- Order routes import
 
 dotenv.config();
 
-const app = express();
-
-// CORS Middleware එක add කරන්න (මේක අනිවාර්යයෙන්ම තිබිය යුතුයි)
-app.use(cors());
+const app = express(); // <-- app variable එක මෙහි declare කරන්න
 
 // Middleware
+app.use(cors());
 app.use(express.json()); // Body parser for JSON requests
 
 // Routes
 app.use('/api/auth', authRoutes);
-// ✅ Apply shop routes under '/api/shops' prefix
-app.use('/api/shops', shopRoutes); 
+app.use('/api/shops', shopRoutes);
+app.use('/api/orders', orderRoutes); // <-- Order routes add කරන්න
 
 // Basic route for testing
 app.get('/', (req, res) => {

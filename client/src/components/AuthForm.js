@@ -1,12 +1,12 @@
-// AuthForm.js
 import React, { useState } from 'react';
 import axios from 'axios';
 import { FaUser, FaEnvelope, FaLock, FaStore } from 'react-icons/fa';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom'; // Added useLocation
 
 const AuthForm = () => {
   const navigate = useNavigate();
+  const location = useLocation(); // Get location state
   const [isRegister, setIsRegister] = useState(true);
   const [form, setForm] = useState({
     name: '',
@@ -14,6 +14,9 @@ const AuthForm = () => {
     password: '',
     role: 'user',
   });
+
+  // Get message from navigation state (if any)
+  const loginMsg = location.state?.msg;
 
   const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -45,7 +48,6 @@ const AuthForm = () => {
     }
   };
 
-  // ... The rest of the JSX is unchanged ...
   return (
     <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
       <motion.div
@@ -57,6 +59,12 @@ const AuthForm = () => {
       >
         <div className="text-center mb-4">
           <h4>{isRegister ? 'Create Account' : 'Welcome Back'}</h4>
+          {/* Show login message if exists */}
+          {loginMsg && (
+            <div className="alert alert-warning mt-2 py-2">
+              {loginMsg}
+            </div>
+          )}
         </div>
 
         <div className="d-flex justify-content-center mb-3">
@@ -64,14 +72,20 @@ const AuthForm = () => {
             <button
               type="button"
               className={`btn ${isRegister ? 'btn-primary' : 'btn-outline-primary'}`}
-              onClick={() => setIsRegister(true)}
+              onClick={() => {
+                setIsRegister(true);
+                navigate('.', { state: null }); // Clear message on tab switch
+              }}
             >
               Register
             </button>
             <button
               type="button"
               className={`btn ${!isRegister ? 'btn-primary' : 'btn-outline-primary'}`}
-              onClick={() => setIsRegister(false)}
+              onClick={() => {
+                setIsRegister(false);
+                navigate('.', { state: null }); // Clear message on tab switch
+              }}
             >
               Login
             </button>
