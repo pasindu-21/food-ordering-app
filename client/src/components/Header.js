@@ -7,7 +7,6 @@ const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Get user role from sessionStorage
   let user = null, role = null;
   try {
     user = JSON.parse(sessionStorage.getItem('user'));
@@ -16,7 +15,11 @@ const Header = () => {
     role = null;
   }
 
-  // Define navigation based on role
+  // Only show logout button if logged in (token exists)
+  const token = sessionStorage.getItem('token');
+  // Hide Logout button on AuthForm (login/register) page
+  const isAuthPage = location.pathname === '/';
+
   let navButtons = [];
   if (role === 'owner') {
     navButtons = [
@@ -60,7 +63,8 @@ const Header = () => {
               {btn.label}
             </Button>
           ))}
-          <LogoutButton />
+          {/* Show Logout only if logged in and not on AuthForm */}
+          {token && !isAuthPage && <LogoutButton />}
         </Box>
       </Toolbar>
     </AppBar>

@@ -13,8 +13,8 @@ const LogoutButton = () => {
   };
 
   return (
-    <Button
-      variant="outlined"
+   <Button
+      variant="contained"
       color="error"
       startIcon={<LogoutIcon />}
       onClick={handleLogout}

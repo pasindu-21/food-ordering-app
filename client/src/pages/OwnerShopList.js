@@ -1,16 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import OrderForm from './OrderForm';
 
-const ShopList = () => {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [currentToken, setCurrentToken] = useState(null);
+const OwnerShopList = () => {
   const [shops, setShops] = useState([]);
+  const [currentToken] = useState(sessionStorage.getItem('token')); // <-- FIXED
   const [editingShop, setEditingShop] = useState(null);
   const [formData, setFormData] = useState({ shopName: '', location: '' });
   const [editingMenuItem, setEditingMenuItem] = useState(null);
   const [menuEditData, setMenuEditData] = useState({});
-  const [showOrderForm, setShowOrderForm] = useState(null);
   const [newMenuItem, setNewMenuItem] = useState({
     name: '',
     price: '',
@@ -20,39 +17,12 @@ const ShopList = () => {
   });
 
   useEffect(() => {
-    const storedUser = sessionStorage.getItem("user");
-    const storedToken = sessionStorage.getItem("token");
-    setCurrentUser(storedUser ? JSON.parse(storedUser) : null);
-    setCurrentToken(storedToken);
-  }, []);
-
-  useEffect(() => {
     if (currentToken) {
-      fetchShops();
-    } else {
-      setShops([]);
+      axios.get("http://localhost:5000/api/shops/my", {
+        headers: { Authorization: `Bearer ${currentToken}` },
+      }).then(res => setShops(res.data));
     }
-    // eslint-disable-next-line
   }, [currentToken]);
-
-  const fetchShops = async () => {
-    if (!currentToken) return;
-    try {
-      let res;
-      if (currentUser?.role === "owner") {
-        res = await axios.get("http://localhost:5000/api/shops/my", {
-          headers: { Authorization: `Bearer ${currentToken}` },
-        });
-      } else {
-        res = await axios.get("http://localhost:5000/api/shops/all", {
-          headers: { Authorization: `Bearer ${currentToken}` },
-        });
-      }
-      setShops(res.data);
-    } catch (err) {
-      setShops([]);
-    }
-  };
 
   // Shop name/location edit
   const handleEditClick = (shop) => {
@@ -67,6 +37,12 @@ const ShopList = () => {
     });
     setEditingShop(null);
     fetchShops();
+  };
+
+  const fetchShops = () => {
+    axios.get("http://localhost:5000/api/shops/my", {
+      headers: { Authorization: `Bearer ${currentToken}` },
+    }).then(res => setShops(res.data));
   };
 
   // Menu item edit
@@ -137,7 +113,7 @@ const ShopList = () => {
 
   return (
     <div className="container mt-4">
-      <h3>{currentUser?.role === "owner" ? "My Shops" : "All Available Shops"}</h3>
+      <h3>My Shops</h3>
       {shops.length === 0 ? (
         <p>No shops found.</p>
       ) : (
@@ -145,7 +121,6 @@ const ShopList = () => {
           <div key={shop._id} className="card mb-3">
             <div className="card-body">
               {editingShop === shop._id ? (
-                // Edit Shop name/location
                 <>
                   <input
                     type="text"
@@ -170,7 +145,6 @@ const ShopList = () => {
                 <>
                   <h5 className="card-title">{shop.shopName}</h5>
                   <p><strong>Location:</strong> {shop.location || 'N/A'}</p>
-                  {shop.owner && <p><strong>Owner:</strong> {shop.owner.name} ({shop.owner.email})</p>}
                   <p className="card-text">Menu:</p>
                   <ul>
                     {shop.menuItems && shop.menuItems.length > 0 ? (
@@ -214,12 +188,8 @@ const ShopList = () => {
                           ) : (
                             <>
                               🍽 {item.name} - Rs.{item.price} (B:{item.breakfastQty}, L:{item.lunchQty}, D:{item.dinnerQty})
-                              {currentUser?.role === 'owner' && (
-                                <>
-                                  <button className="btn btn-primary btn-sm me-2" onClick={() => handleMenuItemEdit(item)}>Edit</button>
-                                  <button className="btn btn-danger btn-sm" onClick={() => handleMenuItemDelete(shop._id, item._id)}>Delete</button>
-                                </>
-                              )}
+                              <button className="btn btn-primary btn-sm me-2" onClick={() => handleMenuItemEdit(item)}>Edit</button>
+                              <button className="btn btn-danger btn-sm" onClick={() => handleMenuItemDelete(shop._id, item._id)}>Delete</button>
                             </>
                           )}
                         </li>
@@ -229,80 +199,59 @@ const ShopList = () => {
                     )}
                   </ul>
                   {/* Add new menu item form */}
-                  {currentUser?.role === 'owner' && (
-                    <form
-                      onSubmit={e => {
-                        e.preventDefault();
-                        handleAddMenuItem(shop);
-                      }}
-                      className="mb-3"
-                      style={{ display: 'flex', gap: '5px', alignItems: 'center' }}
-                    >
-                      <input
-                        type="text"
-                        placeholder="Item Name"
-                        value={newMenuItem.name}
-                        onChange={e => setNewMenuItem({ ...newMenuItem, name: e.target.value })}
-                        required
-                        style={{ width: '100px' }}
-                      />
-                      <input
-                        type="number"
-                        placeholder="Price"
-                        value={newMenuItem.price}
-                        onChange={e => setNewMenuItem({ ...newMenuItem, price: e.target.value })}
-                        required
-                        style={{ width: '70px' }}
-                      />
-                      <input
-                        type="number"
-                        placeholder="B.Qty"
-                        value={newMenuItem.breakfastQty}
-                        onChange={e => setNewMenuItem({ ...newMenuItem, breakfastQty: e.target.value })}
-                        style={{ width: '60px' }}
-                      />
-                      <input
-                        type="number"
-                        placeholder="L.Qty"
-                        value={newMenuItem.lunchQty}
-                        onChange={e => setNewMenuItem({ ...newMenuItem, lunchQty: e.target.value })}
-                        style={{ width: '60px' }}
-                      />
-                      <input
-                        type="number"
-                        placeholder="D.Qty"
-                        value={newMenuItem.dinnerQty}
-                        onChange={e => setNewMenuItem({ ...newMenuItem, dinnerQty: e.target.value })}
-                        style={{ width: '60px' }}
-                      />
-                      <button className="btn btn-success btn-sm" type="submit">Add Item</button>
-                    </form>
-                  )}
-                  {/* User Order Button & OrderForm */}
-                  {currentUser?.role === 'user' && (
-                    <>
-                      <button
-                        className="btn btn-success btn-sm"
-                        onClick={() => setShowOrderForm(shop)}
-                      >
-                        Order
-                      </button>
-                      {showOrderForm && showOrderForm._id === shop._id && (
-                        <OrderForm shop={shop} onOrderPlaced={() => setShowOrderForm(null)} />
-                      )}
-                    </>
-                  )}
-                  {/* Owner: Shop Edit/Delete */}
-                  {currentUser?.role === 'owner' && (
-                    <>
-                      <button onClick={() => handleEditClick(shop)} className="btn btn-primary btn-sm me-2">
-                        Edit Shop
-                      </button>
-                      <button onClick={() => handleDeleteShop(shop._id)} className="btn btn-danger btn-sm">
-                        Delete Shop
-                      </button>
-                    </>
-                  )}
+                  <form
+                    onSubmit={e => {
+                      e.preventDefault();
+                      handleAddMenuItem(shop);
+                    }}
+                    className="mb-3"
+                    style={{ display: 'flex', gap: '5px', alignItems: 'center' }}
+                  >
+                    <input
+                      type="text"
+                      placeholder="Item Name"
+                      value={newMenuItem.name}
+                      onChange={e => setNewMenuItem({ ...newMenuItem, name: e.target.value })}
+                      required
+                      style={{ width: '100px' }}
+                    />
+                    <input
+                      type="number"
+                      placeholder="Price"
+                      value={newMenuItem.price}
+                      onChange={e => setNewMenuItem({ ...newMenuItem, price: e.target.value })}
+                      required
+                      style={{ width: '70px' }}
+                    />
+                    <input
+                      type="number"
+                      placeholder="B.Qty"
+                      value={newMenuItem.breakfastQty}
+                      onChange={e => setNewMenuItem({ ...newMenuItem, breakfastQty: e.target.value })}
+                      style={{ width: '60px' }}
+                    />
+                    <input
+                      type="number"
+                      placeholder="L.Qty"
+                      value={newMenuItem.lunchQty}
+                      onChange={e => setNewMenuItem({ ...newMenuItem, lunchQty: e.target.value })}
+                      style={{ width: '60px' }}
+                    />
+                    <input
+                      type="number"
+                      placeholder="D.Qty"
+                      value={newMenuItem.dinnerQty}
+                      onChange={e => setNewMenuItem({ ...newMenuItem, dinnerQty: e.target.value })}
+                      style={{ width: '60px' }}
+                    />
+                    <button className="btn btn-success btn-sm" type="submit">Add Item</button>
+                  </form>
+                  <button onClick={() => handleEditClick(shop)} className="btn btn-primary btn-sm me-2">
+                    Edit Shop
+                  </button>
+                  <button onClick={() => handleDeleteShop(shop._id)} className="btn btn-danger btn-sm">
+                    Delete Shop
+                  </button>
                 </>
               )}
             </div>
@@ -313,4 +262,4 @@ const ShopList = () => {
   );
 };
 
-export default ShopList;
+export default OwnerShopList;
