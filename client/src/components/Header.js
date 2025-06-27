@@ -1,3 +1,5 @@
+// src/components/Header.js
+
 import React from 'react';
 import { AppBar, Toolbar, Typography, Box, Button } from '@mui/material';
 import LogoutButton from './LogoutButton';
@@ -24,7 +26,10 @@ const Header = () => {
   if (role === 'owner') {
     navButtons = [
       { label: 'View My Shop', path: '/shops', active: location.pathname === '/shops' },
-      { label: 'View Orders', path: '/owner-orders', active: location.pathname === '/owner-orders' }
+      // "View Orders" නම "Today's Orders" ලෙස වෙනස් කරා
+      { label: "Today's Orders", path: '/owner-orders', active: location.pathname === '/owner-orders' },
+      // <<<<---- Daily Reports link එක මෙතනට add කරා ---->>>>
+      { label: 'Daily Reports', path: '/daily-reports', active: location.pathname === '/daily-reports' }
     ];
   } else if (role === 'user') {
     navButtons = [
