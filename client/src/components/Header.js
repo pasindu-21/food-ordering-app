@@ -3,40 +3,57 @@
 import React from 'react';
 import { AppBar, Toolbar, Typography, Box, Button } from '@mui/material';
 import LogoutButton from './LogoutButton';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  let user = null, role = null;
+  let role = null;
   try {
-    user = JSON.parse(sessionStorage.getItem('user'));
-    role = user?.role;
+    role = JSON.parse(sessionStorage.getItem('user'))?.role;
   } catch {
     role = null;
   }
-
-  // Only show logout button if logged in (token exists)
-  const token = sessionStorage.getItem('token');
-  // Hide Logout button on AuthForm (login/register) page
-  const isAuthPage = location.pathname === '/';
-
-  let navButtons = [];
-  if (role === 'owner') {
-    navButtons = [
-      { label: 'View My Shop', path: '/shops', active: location.pathname === '/shops' },
-      // "View Orders" නම "Today's Orders" ලෙස වෙනස් කරා
-      { label: "Today's Orders", path: '/owner-orders', active: location.pathname === '/owner-orders' },
-      // <<<<---- Daily Reports link එක මෙතනට add කරා ---->>>>
-      { label: 'Daily Reports', path: '/daily-reports', active: location.pathname === '/daily-reports' }
-    ];
-  } else if (role === 'user') {
-    navButtons = [
-      { label: 'View Shops', path: '/shops', active: location.pathname === '/shops' },
-      { label: 'View My Orders', path: '/my-orders', active: location.pathname === '/my-orders' }
-    ];
+  
+  // Don't show header on the initial auth page (login/register)
+  if (location.pathname === '/') {
+    return null;
   }
+
+  const renderNavButtons = () => {
+    if (role === 'owner') {
+      // Owner Links
+      return (
+        <>
+          <Button component={Link} to="/owner-home" color="inherit">Home</Button>
+          
+          {/* <<<<---- FIX: Button එකේ path එක '/my-shops' ලෙස වෙනස් කරා ---->>>> */}
+          {/* දැන් මේක owner ගේ private shop list එකට යනවා */}
+          <Button component={Link} to="/my-shops" color="inherit">My Shop</Button>
+          
+          <Button component={Link} to="/owner-orders" color="inherit">Today's Orders</Button>
+          <Button component={Link} to="/daily-reports" color="inherit">Daily Reports</Button>
+          <LogoutButton />
+        </>
+      );
+    } else if (role === 'user') {
+      // Logged-in User Links
+      return (
+        <>
+          <Button component={Link} to="/user-home" color="inherit">Home</Button>
+          <Button component={Link} to="/shops" color="inherit">View Shops</Button>
+          <Button component={Link} to="/my-orders" color="inherit">My Orders</Button>
+          <LogoutButton />
+        </>
+      );
+    } else {
+      // Guest Links (when on public pages like /shops)
+      return (
+        <Button component={Link} to="/" color="inherit">Login / Register</Button>
+      );
+    }
+  };
 
   return (
     <AppBar position="static" color="primary" elevation={2}>
@@ -47,30 +64,12 @@ const Header = () => {
           onClick={() => {
             if (role === 'owner') navigate('/owner-home');
             else if (role === 'user') navigate('/user-home');
-            else navigate('/');
+            else navigate('/shops'); // Guests go to the public shop list
           }}
         >
           FoodHub
         </Typography>
-        <Box>
-          {navButtons.map(btn => (
-            <Button
-              key={btn.label}
-              color="inherit"
-              onClick={() => navigate(btn.path)}
-              sx={{
-                fontWeight: btn.active ? 700 : 400,
-                borderBottom: btn.active ? '2px solid #fff' : 'none',
-                borderRadius: 0,
-                mx: 1
-              }}
-            >
-              {btn.label}
-            </Button>
-          ))}
-          {/* Show Logout only if logged in and not on AuthForm */}
-          {token && !isAuthPage && <LogoutButton />}
-        </Box>
+        <Box>{renderNavButtons()}</Box>
       </Toolbar>
     </AppBar>
   );

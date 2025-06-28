@@ -1,12 +1,15 @@
+// src/components/AuthForm.js
+
 import React, { useState } from 'react';
 import axios from 'axios';
 import { FaUser, FaEnvelope, FaLock, FaStore } from 'react-icons/fa';
 import { motion } from 'framer-motion';
-import { useNavigate, useLocation } from 'react-router-dom'; // Added useLocation
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Alert, Divider } from '@mui/material'; // Import Divider
 
 const AuthForm = () => {
   const navigate = useNavigate();
-  const location = useLocation(); // Get location state
+  const location = useLocation();
   const [isRegister, setIsRegister] = useState(true);
   const [form, setForm] = useState({
     name: '',
@@ -14,11 +17,14 @@ const AuthForm = () => {
     password: '',
     role: 'user',
   });
+  const [error, setError] = useState('');
 
-  // Get message from navigation state (if any)
   const loginMsg = location.state?.msg;
 
-  const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = e => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+    setError(''); // Clear error on change
+  };
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -42,7 +48,7 @@ const AuthForm = () => {
         }
       }
     } catch (err) {
-      alert(err.response?.data?.msg || 'Login/Register Error');
+      setError(err.response?.data?.msg || 'An error occurred.');
       sessionStorage.removeItem('user');
       sessionStorage.removeItem('token');
     }
@@ -59,36 +65,14 @@ const AuthForm = () => {
       >
         <div className="text-center mb-4">
           <h4>{isRegister ? 'Create Account' : 'Welcome Back'}</h4>
-          {/* Show login message if exists */}
-          {loginMsg && (
-            <div className="alert alert-warning mt-2 py-2">
-              {loginMsg}
-            </div>
-          )}
+          {loginMsg && <Alert severity="warning" className="mt-2 py-2">{loginMsg}</Alert>}
+          {error && <Alert severity="error" className="mt-2 py-2">{error}</Alert>}
         </div>
 
         <div className="d-flex justify-content-center mb-3">
           <div className="btn-group w-100">
-            <button
-              type="button"
-              className={`btn ${isRegister ? 'btn-primary' : 'btn-outline-primary'}`}
-              onClick={() => {
-                setIsRegister(true);
-                navigate('.', { state: null }); // Clear message on tab switch
-              }}
-            >
-              Register
-            </button>
-            <button
-              type="button"
-              className={`btn ${!isRegister ? 'btn-primary' : 'btn-outline-primary'}`}
-              onClick={() => {
-                setIsRegister(false);
-                navigate('.', { state: null }); // Clear message on tab switch
-              }}
-            >
-              Login
-            </button>
+            <button type="button" className={`btn ${isRegister ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => { setIsRegister(true); setError(''); }}>Register</button>
+            <button type="button" className={`btn ${!isRegister ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => { setIsRegister(false); setError(''); }}>Login</button>
           </div>
         </div>
 
@@ -120,6 +104,17 @@ const AuthForm = () => {
             {isRegister ? 'Register' : 'Login'}
           </button>
         </form>
+
+        <Divider sx={{ my: 2 }}>OR</Divider>
+
+        {/* <<<<---- මෙන්න අලුත් Guest Button එක ---->>>> */}
+        <button
+          className="btn btn-outline-secondary w-100"
+          onClick={() => navigate('/shops')} // Guest කෙනෙක් public shop list එකට redirect කරනවා
+        >
+          Browse Shops as a Guest
+        </button>
+
       </motion.div>
     </div>
   );

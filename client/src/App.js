@@ -15,24 +15,11 @@ import OwnerShopList from './pages/OwnerShopList';
 import AddShop from './pages/AddShop';
 import UserOrders from './pages/UserOrders';
 import OwnerOrders from './pages/OwnerOrders';
-import DailyReports from './pages/DailyReports'; // <<<<---- 1. අලුත් DailyReports page එක import කරා
+import DailyReports from './pages/DailyReports';
 
 const theme = createTheme({
   // You can customize your theme palette here
 });
-
-// Helper component to switch shop list by role
-function ShopsSwitch() {
-  let role = null;
-  try {
-    const user = JSON.parse(sessionStorage.getItem('user'));
-    role = user?.role;
-  } catch {
-    role = null;
-  }
-  if (role === 'owner') return <OwnerShopList />;
-  return <UserShopList />;
-}
 
 function App() {
   return (
@@ -40,37 +27,25 @@ function App() {
       <Router>
         <Header />
         <Routes>
-          {/* Public Route */}
+          {/* Default route is the AuthForm */}
           <Route path="/" element={<AuthForm />} />
-
-          {/* User Specific Routes */}
-          <Route path="/user-home" element={
-            <PrivateRoute><UserHome /></PrivateRoute>
-          } />
-          <Route path="/my-orders" element={
-            <PrivateRoute><UserOrders /></PrivateRoute>
-          } />
-
-          {/* Owner Specific Routes */}
-          <Route path="/owner-home" element={
-            <PrivateRoute><OwnerHome /></PrivateRoute>
-          } />
-          <Route path="/add-shop" element={
-            <PrivateRoute><AddShop /></PrivateRoute>
-          } />
-          <Route path="/owner-orders" element={
-            <PrivateRoute><OwnerOrders /></PrivateRoute>
-          } />
           
-          {/* <<<<---- 2. Daily Reports page එකට අලුත් route එකක් add කරා ---->>>> */}
-          <Route path="/daily-reports" element={
-            <PrivateRoute><DailyReports /></PrivateRoute>
-          } />
+          {/* <<<<---- 1. THIS IS THE PUBLIC ROUTE FOR GUESTS AND USERS ---->>>> */}
+          <Route path="/shops" element={<UserShopList />} />
 
-          {/* Shared Routes (logic inside component) */}
-          <Route path="/shops" element={
-            <PrivateRoute><ShopsSwitch /></PrivateRoute>
-          } />
+          {/* User Specific Private Routes */}
+          <Route path="/user-home" element={<PrivateRoute><UserHome /></PrivateRoute>} />
+          <Route path="/my-orders" element={<PrivateRoute><UserOrders /></PrivateRoute>} />
+
+          {/* Owner Specific Private Routes */}
+          <Route path="/owner-home" element={<PrivateRoute><OwnerHome /></PrivateRoute>} />
+          
+          {/* <<<<---- 2. FIX: THIS IS THE NEW, PRIVATE ROUTE FOR OWNERS ONLY ---->>>> */}
+          <Route path="/my-shops" element={<PrivateRoute><OwnerShopList /></PrivateRoute>} />
+          
+          <Route path="/add-shop" element={<PrivateRoute><AddShop /></PrivateRoute>} />
+          <Route path="/owner-orders" element={<PrivateRoute><OwnerOrders /></PrivateRoute>} />
+          <Route path="/daily-reports" element={<PrivateRoute><DailyReports /></PrivateRoute>} />
         </Routes>
         <Footer />
       </Router>

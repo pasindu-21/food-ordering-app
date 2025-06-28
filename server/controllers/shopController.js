@@ -1,11 +1,12 @@
+// server/controllers/shopController.js
+
 const Shop = require('../models/Shop');
 
-// Get all shops (only for normal users)
+// <<<<---- FIX එක මෙතන ---->>>>
+// Get all shops (for public and user view)
 exports.getAllShops = async (req, res) => {
   try {
-    if (req.user.role !== 'user') {
-      return res.status(403).json({ msg: 'Only users can access all shops.' });
-    }
+    // req.user.role check එක අයින් කරා. දැන් මේ function එක public access එකට safe.
     const shops = await Shop.find().populate('owner', 'name email');
     res.json(shops);
   } catch (err) {
@@ -17,6 +18,7 @@ exports.getAllShops = async (req, res) => {
 // Get shops for the logged-in owner
 exports.getMyShops = async (req, res) => {
   try {
+    // This requires login, so req.user will exist.
     const myShops = await Shop.find({ owner: req.user._id });
     res.status(200).json(myShops);
   } catch (error) {
@@ -131,6 +133,7 @@ exports.deleteShop = async (req, res) => {
       return res.status(403).json({ msg: 'You are not authorized to delete this shop.' });
     }
 
+    // Using deleteOne() which is the modern way
     await shop.deleteOne();
     res.json({ msg: 'Shop deleted successfully.' });
   } catch (err) {

@@ -1,5 +1,7 @@
+// src/pages/OwnerHome.js
+
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom'; // <<<<---- 'Link' import කරගන්න
 import axios from 'axios';
 
 // Material UI imports
@@ -17,21 +19,13 @@ import AddBusinessIcon from '@mui/icons-material/AddBusiness';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 
-// Custom theme (You can move this to App.js if you want global theming)
+// Custom theme
 const customTheme = createTheme({
   palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#ff9800',
-    },
-    info: {
-      main: '#00bcd4',
-    },
-    background: {
-      default: '#f4f6f8',
-    },
+    primary: { main: '#1976d2' },
+    secondary: { main: '#ff9800' },
+    info: { main: '#00bcd4' },
+    background: { default: '#f4f6f8' },
   },
   typography: {
     fontFamily: 'Roboto, Arial',
@@ -74,20 +68,23 @@ const OwnerHome = () => {
             p: isMobile ? 2 : 5,
             minWidth: isMobile ? '90vw' : 350,
             width: isMobile ? '100%' : 400,
-            bgcolor: 'background.default',
+            bgcolor: 'background.paper', // Changed to paper for better contrast
           }}
         >
           <Typography
             variant={isMobile ? 'h5' : 'h4'}
             component="h2"
             gutterBottom
-            sx={{ fontWeight: 'bold', color: 'primary.main' }}
+            sx={{ fontWeight: 'bold', color: 'primary.main', textAlign: 'center' }}
           >
-            Welcome, Shop Owner
+            Owner Dashboard
           </Typography>
           <Stack spacing={2} direction="column" alignItems="center">
-            {/* Only show if user does NOT have a shop */}
-            {!hasShop && (
+            {hasShop ? (
+              <Alert severity="info" sx={{ width: '100%' }}>
+                You already have a shop. You can manage it from here.
+              </Alert>
+            ) : (
               <Button
                 variant="contained"
                 color="primary"
@@ -96,26 +93,26 @@ const OwnerHome = () => {
                 size="large"
                 sx={{ width: '100%' }}
               >
-                Add New Shop
+                Add Your Shop
               </Button>
             )}
-            {/* Show info message if user already has a shop */}
-            {hasShop && (
-              <Alert severity="info" sx={{ width: '100%' }}>
-                You already have a shop.
-              </Alert>
-            )}
 
+            {/* <<<<---- මෙන්න FIX එක ---->>>> */}
+            {/* 'onClick' වෙනුවට 'component={Link}' සහ 'to="/my-shops"' use කරා */}
             <Button
               variant="outlined"
               color="secondary"
               startIcon={<StorefrontIcon />}
-              onClick={() => navigate('/shops')}
+              component={Link}
+              to="/my-shops"
               size="large"
               sx={{ width: '100%' }}
+              // Disable the button if the user doesn't have a shop yet
+              disabled={!hasShop} 
             >
-              View My Shops
+              View My Shop
             </Button>
+            
             <Button
               variant="outlined"
               color="info"
