@@ -16,29 +16,34 @@ const Header = () => {
     role = null;
   }
   
-  // Don't show header on the initial auth page (login/register)
   if (location.pathname === '/') {
     return null;
   }
 
   const renderNavButtons = () => {
-    if (role === 'owner') {
-      // Owner Links
+    // <<<<---- Admin Links ---->>>>
+    if (role === 'admin') {
+      return (
+        <>
+          <Button component={Link} to="/admin-dashboard" color="inherit">Admin Panel</Button>
+          <LogoutButton />
+        </>
+      );
+    } 
+    // Owner Links
+    else if (role === 'owner') {
       return (
         <>
           <Button component={Link} to="/owner-home" color="inherit">Home</Button>
-          
-          {/* <<<<---- FIX: Button එකේ path එක '/my-shops' ලෙස වෙනස් කරා ---->>>> */}
-          {/* දැන් මේක owner ගේ private shop list එකට යනවා */}
           <Button component={Link} to="/my-shops" color="inherit">My Shop</Button>
-          
           <Button component={Link} to="/owner-orders" color="inherit">Today's Orders</Button>
           <Button component={Link} to="/daily-reports" color="inherit">Daily Reports</Button>
           <LogoutButton />
         </>
       );
-    } else if (role === 'user') {
-      // Logged-in User Links
+    } 
+    // Logged-in User Links
+    else if (role === 'user') {
       return (
         <>
           <Button component={Link} to="/user-home" color="inherit">Home</Button>
@@ -47,26 +52,26 @@ const Header = () => {
           <LogoutButton />
         </>
       );
-    } else {
-      // Guest Links (when on public pages like /shops)
+    } 
+    // Guest Links
+    else {
       return (
         <Button component={Link} to="/" color="inherit">Login / Register</Button>
       );
     }
   };
 
+  const handleLogoClick = () => {
+    if (role === 'admin') navigate('/admin-dashboard');
+    else if (role === 'owner') navigate('/owner-home');
+    else if (role === 'user') navigate('/user-home');
+    else navigate('/shops');
+  };
+
   return (
     <AppBar position="static" color="primary" elevation={2}>
       <Toolbar>
-        <Typography
-          variant="h6"
-          sx={{ flexGrow: 1, fontWeight: 700, cursor: 'pointer' }}
-          onClick={() => {
-            if (role === 'owner') navigate('/owner-home');
-            else if (role === 'user') navigate('/user-home');
-            else navigate('/shops'); // Guests go to the public shop list
-          }}
-        >
+        <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700, cursor: 'pointer' }} onClick={handleLogoClick}>
           FoodHub
         </Typography>
         <Box>{renderNavButtons()}</Box>

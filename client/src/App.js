@@ -16,6 +16,7 @@ import AddShop from './pages/AddShop';
 import UserOrders from './pages/UserOrders';
 import OwnerOrders from './pages/OwnerOrders';
 import DailyReports from './pages/DailyReports';
+import AdminDashboard from './pages/AdminDashboard';
 
 const theme = createTheme({
   // You can customize your theme palette here
@@ -46,6 +47,8 @@ function App() {
           <Route path="/add-shop" element={<PrivateRoute><AddShop /></PrivateRoute>} />
           <Route path="/owner-orders" element={<PrivateRoute><OwnerOrders /></PrivateRoute>} />
           <Route path="/daily-reports" element={<PrivateRoute><DailyReports /></PrivateRoute>} />
+          <Route path="/admin-dashboard" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
+
         </Routes>
         <Footer />
       </Router>

@@ -5,7 +5,7 @@ import axios from 'axios';
 import { FaUser, FaEnvelope, FaLock, FaStore } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Alert, Divider } from '@mui/material'; // Import Divider
+import { Alert, Divider } from '@mui/material';
 
 const AuthForm = () => {
   const navigate = useNavigate();
@@ -23,7 +23,7 @@ const AuthForm = () => {
 
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    setError(''); // Clear error on change
+    setError('');
   };
 
   const handleSubmit = async e => {
@@ -41,10 +41,15 @@ const AuthForm = () => {
         sessionStorage.setItem('user', JSON.stringify(res.data.user));
         sessionStorage.setItem('token', res.data.token);
 
-        if (res.data.user.role === 'owner') {
-          navigate('/owner-home');
+        const userRole = res.data.user.role;
+
+        // <<<<---- මෙන්න FIX එක: Role එක අනුව redirect කරනවා ---->>>>
+        if (userRole === 'admin') {
+          navigate('/admin-dashboard'); // Admin නම්, dashboard එකට යනවා
+        } else if (userRole === 'owner') {
+          navigate('/owner-home'); // Owner නම්, owner home එකට යනවා
         } else {
-          navigate('/user-home');
+          navigate('/user-home'); // User නම්, user home එකට යනවා
         }
       }
     } catch (err) {
@@ -88,6 +93,7 @@ const AuthForm = () => {
                 <select id="role" name="role" className="form-select" onChange={handleChange} value={form.role}>
                   <option value="user">Normal User</option>
                   <option value="owner">Shop Owner</option>
+                  {/* Register form එකේ Admin role එක පෙන්නන්නේ නැහැ. ඒක security measure එකක්. */}
                 </select>
               </div>
             </>
@@ -107,11 +113,7 @@ const AuthForm = () => {
 
         <Divider sx={{ my: 2 }}>OR</Divider>
 
-        {/* <<<<---- මෙන්න අලුත් Guest Button එක ---->>>> */}
-        <button
-          className="btn btn-outline-secondary w-100"
-          onClick={() => navigate('/shops')} // Guest කෙනෙක් public shop list එකට redirect කරනවා
-        >
+        <button className="btn btn-outline-secondary w-100" onClick={() => navigate('/shops')}>
           Browse Shops as a Guest
         </button>
 
