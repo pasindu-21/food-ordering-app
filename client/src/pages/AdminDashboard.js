@@ -2,67 +2,165 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Container, Grid, Paper, Typography, Box, CircularProgress } from '@mui/material';
+import {
+  Container, Grid, Paper, Typography, Box, CircularProgress, Alert,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  IconButton, Tooltip, Dialog, DialogActions, DialogContent,
+  DialogTitle, Button, Select, MenuItem, FormControl
+} from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 
+// --- Reusable Components ---
 const StatCard = ({ title, value, icon, color }) => (
   <Paper elevation={3} sx={{ p: 3, display: 'flex', alignItems: 'center', borderRadius: 3 }}>
-    <Box sx={{ bgcolor: color, borderRadius: '50%', p: 2, mr: 2, color: '#fff' }}>
-      {icon}
-    </Box>
-    <Box>
-      <Typography color="text.secondary">{title}</Typography>
-      <Typography variant="h4" component="h2" fontWeight="bold">{value}</Typography>
-    </Box>
+    <Box sx={{ bgcolor: color, borderRadius: '50%', p: 2, mr: 2, color: '#fff' }}>{icon}</Box>
+    <Box><Typography color="text.secondary">{title}</Typography><Typography variant="h4" component="h2" fontWeight="bold">{value}</Typography></Box>
   </Paper>
 );
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      const token = sessionStorage.getItem('token');
-      try {
-        const res = await axios.get('http://localhost:5000/api/admin/stats', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setStats(res.data);
-      } catch (error) {
-        console.error("Failed to fetch admin stats", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStats();
-  }, []);
+  // State for dialogs
+  const [editUser, setEditUser] = useState(null);
+  const [deleteUser, setDeleteUser] = useState(null);
+  const [newRole, setNewRole] = useState('');
+
+  const fetchData = async () => {
+    setLoading(true);
+    const token = sessionStorage.getItem('token');
+    try {
+      const [statsRes, usersRes] = await Promise.all([
+        axios.get('http://localhost:5000/api/admin/stats', { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get('http://localhost:5000/api/admin/users', { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+      setStats(statsRes.data);
+      setUsers(usersRes.data);
+    } catch (err) {
+      setError('Failed to fetch admin data.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchData(); }, []);
+  
+  // --- Handler Functions ---
+  const handleOpenEdit = (user) => {
+    setEditUser(user);
+    setNewRole(user.role);
+  };
+  const handleCloseEdit = () => setEditUser(null);
+
+  const handleRoleUpdate = async () => {
+    const token = sessionStorage.getItem('token');
+    try {
+      await axios.put(`http://localhost:5000/api/admin/users/${editUser._id}/role`, 
+        { role: newRole },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      fetchData(); // Refresh data
+      handleCloseEdit();
+    } catch (err) {
+      alert(err.response?.data?.msg || 'Failed to update role.');
+    }
+  };
+
+  const handleOpenDelete = (user) => setDeleteUser(user);
+  const handleCloseDelete = () => setDeleteUser(null);
+
+  const handleDeleteUser = async () => {
+    const token = sessionStorage.getItem('token');
+    try {
+      await axios.delete(`http://localhost:5000/api/admin/users/${deleteUser._id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchData(); // Refresh data
+      handleCloseDelete();
+    } catch (err) {
+      alert(err.response?.data?.msg || 'Failed to delete user.');
+    }
+  };
+
+  if (loading) return <Box display="flex" justifyContent="center" mt={5}><CircularProgress /></Box>;
+  if (error) return <Container sx={{mt: 4}}><Alert severity="error">{error}</Alert></Container>;
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" gutterBottom fontWeight="bold" color="primary.main">
-        Admin Dashboard
-      </Typography>
-      {loading ? (
-        <Box display="flex" justifyContent="center" mt={5}><CircularProgress /></Box>
-      ) : stats ? (
-        <Grid container spacing={3}>
-          <Grid item xs={12} sm={6} md={4}>
-            <StatCard title="Total Users" value={stats.totalUsers} icon={<PeopleIcon />} color="#1976d2" />
-          </Grid>
-          <Grid item xs={12} sm={6} md={4}>
-            <StatCard title="Total Shops" value={stats.totalShops} icon={<StorefrontIcon />} color="#ff9800" />
-          </Grid>
-          <Grid item xs={12} sm={6} md={4}>
-            <StatCard title="Total Orders" value={stats.totalOrders} icon={<ShoppingCartIcon />} color="#4caf50" />
-          </Grid>
-          {/* You can add more components here to list users, shops etc. */}
-        </Grid>
-      ) : (
-        <Typography color="error">Could not load dashboard data.</Typography>
-      )}
+      {/* --- Statistics Section --- */}
+      <Typography variant="h4" gutterBottom fontWeight="bold" color="primary.main">Admin Dashboard</Typography>
+      <Grid container spacing={3} sx={{ mb: 5 }}>
+        <Grid item xs={12} sm={6} md={4}><StatCard title="Total Users" value={stats.totalUsers} icon={<PeopleIcon />} color="#1976d2" /></Grid>
+        <Grid item xs={12} sm={6} md={4}><StatCard title="Total Shops" value={stats.totalShops} icon={<StorefrontIcon />} color="#ff9800" /></Grid>
+        <Grid item xs={12} sm={6} md={4}><StatCard title="Total Orders" value={stats.totalOrders} icon={<ShoppingCartIcon />} color="#4caf50" /></Grid>
+      </Grid>
+
+      {/* <<<<---- NEW: User Management Section ---->>>> */}
+      <Typography variant="h5" gutterBottom fontWeight="bold">User Management</Typography>
+      <Paper elevation={3} sx={{ p: 2 }}>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Name</TableCell>
+                <TableCell>Email</TableCell>
+                <TableCell>Role</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {users.map((user) => (
+                <TableRow key={user._id}>
+                  <TableCell>{user.name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.role}</TableCell>
+                  <TableCell align="right">
+                    <Tooltip title="Update Role"><IconButton onClick={() => handleOpenEdit(user)}><EditIcon /></IconButton></Tooltip>
+                    <Tooltip title="Delete User"><IconButton color="error" onClick={() => handleOpenDelete(user)}><DeleteIcon /></IconButton></Tooltip>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
+
+      {/* --- Dialog for Editing Role --- */}
+      <Dialog open={!!editUser} onClose={handleCloseEdit}>
+        <DialogTitle>Update Role for {editUser?.name}</DialogTitle>
+        <DialogContent>
+          <FormControl fullWidth sx={{mt: 2}}>
+            <Select value={newRole} onChange={(e) => setNewRole(e.target.value)}>
+              <MenuItem value="user">User</MenuItem>
+              <MenuItem value="owner">Owner</MenuItem>
+              <MenuItem value="admin">Admin</MenuItem>
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseEdit}>Cancel</Button>
+          <Button onClick={handleRoleUpdate} variant="contained">Save</Button>
+        </DialogActions>
+      </Dialog>
+      
+      {/* --- Dialog for Deleting User --- */}
+      <Dialog open={!!deleteUser} onClose={handleCloseDelete}>
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+            <Typography>Are you sure you want to delete the user <strong>{deleteUser?.name}</strong>? This action cannot be undone.</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDelete}>Cancel</Button>
+          <Button onClick={handleDeleteUser} color="error" variant="contained">Delete</Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
