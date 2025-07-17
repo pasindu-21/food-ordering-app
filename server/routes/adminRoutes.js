@@ -8,7 +8,8 @@ const adminController = require('../controllers/adminController');
 router.get('/stats', adminAuth, adminController.getStats);
 router.get('/users', adminAuth, adminController.getAllUsers);
 
-// <<<<---- Update route එක සම්පූර්ණයෙන්ම අයින් කරා ---->>>>
+// <<<<---- NEW: Suspend/Unsuspend user route ---->>>>
+router.put('/users/:id/suspend', adminAuth, adminController.suspendUser);
 
 router.delete('/users/:id', adminAuth, adminController.deleteUser);
 

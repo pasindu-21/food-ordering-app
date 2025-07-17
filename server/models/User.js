@@ -8,10 +8,14 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { 
     type: String, 
-    // <<<<---- 'admin' role එක මෙතනට add කරා ---->>>>
     enum: ["user", "owner", "admin"], 
     required: true 
   },
+  // <<<<---- NEW: isSuspended field ---->>>>
+  isSuspended: {
+    type: Boolean,
+    default: false
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model("User", userSchema);

@@ -2,7 +2,7 @@
 
 const User = require('../models/User');
 const Shop = require('../models/Shop');
-const Order = require('../models/Order');
+const Order = require('../models/Order'); // <<<<---- FIX: Order model එක import කරා
 
 // Get system-wide statistics
 exports.getStats = async (req, res) => {
@@ -11,7 +11,10 @@ exports.getStats = async (req, res) => {
     const totalShops = await Shop.countDocuments();
     const totalOrders = await Order.countDocuments();
     res.json({ totalUsers, totalShops, totalOrders });
-  } catch (err) { res.status(500).send('Server Error'); }
+  } catch (err) {
+    console.error('Error in getStats:', err.message);
+    res.status(500).send('Server Error');
+  }
 };
 
 // Get all users
@@ -19,10 +22,29 @@ exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select('-password');
     res.json(users);
-  } catch (err) { res.status(500).send('Server Error'); }
+  } catch (err) {
+    console.error('Error in getAllUsers:', err.message);
+    res.status(500).send('Server Error');
+  }
 };
 
-// <<<<---- updateUserRole function එක සම්පූර්ණයෙන්ම අයින් කරා ---->>>>
+// Suspend or Unsuspend a user
+exports.suspendUser = async (req, res) => {
+  try {
+    const userIdToSuspend = req.params.id;
+    if (req.user.id === userIdToSuspend) return res.status(400).json({ msg: "You cannot suspend your own account." });
+
+    const user = await User.findById(userIdToSuspend);
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+
+    user.isSuspended = !user.isSuspended;
+    await user.save();
+    res.json({ msg: `User has been ${user.isSuspended ? 'suspended' : 'unsuspended'}.`, user });
+  } catch (err) {
+    console.error('Error in suspendUser:', err.message);
+    res.status(500).send('Server Error');
+  }
+};
 
 // Delete a user
 exports.deleteUser = async (req, res) => {
@@ -38,5 +60,8 @@ exports.deleteUser = async (req, res) => {
     
     await user.deleteOne();
     res.json({ msg: 'User and associated data removed successfully.' });
-  } catch (err) { res.status(500).send('Server Error'); }
+  } catch (err) {
+    console.error('Error in deleteUser:', err.message);
+    res.status(500).send('Server Error');
+  }
 };
