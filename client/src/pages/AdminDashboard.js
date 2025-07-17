@@ -16,9 +16,12 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import BlockIcon from '@mui/icons-material/Block';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
+// <<<<---- FIX: 'StatCard' component එකේ නිවැරදි code එක මෙතනට දානවා ---->>>>
 const StatCard = ({ title, value, icon, color }) => (
   <Paper elevation={3} sx={{ p: 3, display: 'flex', alignItems: 'center', borderRadius: 3 }}>
-    <Box sx={{ bgcolor: color, borderRadius: '50%', p: 2, mr: 2, color: '#fff' }}>{icon}</Box>
+    <Box sx={{ bgcolor: color, borderRadius: '50%', p: 2, mr: 2, color: '#fff' }}>
+      {icon}
+    </Box>
     <Box>
       <Typography color="text.secondary">{title}</Typography>
       <Typography variant="h4" component="h2" fontWeight="bold">{value}</Typography>
@@ -118,8 +121,9 @@ const AdminDashboard = () => {
             <Typography variant="h6" gutterBottom>User Roles Distribution</Typography>
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="name" /><YAxis allowDecimals={false} /><RechartsTooltip />
-                <Bar dataKey="count" onClick={() => {}} />
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" /><YAxis allowDecimals={false} /><RechartsTooltip />
+                <Bar dataKey="count" />
               </BarChart>
             </ResponsiveContainer>
           </Paper>
@@ -144,10 +148,7 @@ const AdminDashboard = () => {
                   <TableCell>{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.role}</TableCell>
-                  <TableCell>
-                    {/* <<<<---- FIX: Added onClick to the Chip component ---->>>> */}
-                    <Chip label={user.isSuspended ? 'Suspended' : 'Active'} color={user.isSuspended ? 'warning' : 'success'} size="small" onClick={() => {}} />
-                  </TableCell>
+                  <TableCell><Chip label={user.isSuspended ? 'Suspended' : 'Active'} color={user.isSuspended ? 'warning' : 'success'} size="small" /></TableCell>
                   <TableCell align="right">
                     <Tooltip title={user.isSuspended ? 'Unsuspend User' : 'Suspend User'}><IconButton onClick={() => handleSuspendUser(user)}>{user.isSuspended ? <CheckCircleIcon color="success" /> : <BlockIcon />}</IconButton></Tooltip>
                     <Tooltip title="Delete User"><IconButton color="error" onClick={() => handleOpenDelete(user)}><DeleteIcon /></IconButton></Tooltip>
