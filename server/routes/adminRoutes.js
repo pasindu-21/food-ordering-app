@@ -7,7 +7,9 @@ const adminController = require('../controllers/adminController');
 
 router.get('/stats', adminAuth, adminController.getStats);
 router.get('/users', adminAuth, adminController.getAllUsers);
-router.put('/users/:id/role', adminAuth, adminController.updateUserRole);
+
+// <<<<---- Update route එක සම්පූර්ණයෙන්ම අයින් කරා ---->>>>
+
 router.delete('/users/:id', adminAuth, adminController.deleteUser);
 
 module.exports = router;

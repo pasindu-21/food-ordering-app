@@ -6,12 +6,12 @@ import {
   Container, Grid, Paper, Typography, Box, CircularProgress, Alert,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   IconButton, Tooltip, Dialog, DialogActions, DialogContent,
-  DialogTitle, Button, Select, MenuItem, FormControl
+  DialogTitle, Button
 } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import EditIcon from '@mui/icons-material/Edit';
+// <<<<---- EditIcon import එක අයින් කරා ---->>>>
 import DeleteIcon from '@mui/icons-material/Delete';
 
 // --- Reusable Components ---
@@ -28,10 +28,8 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // State for dialogs
-  const [editUser, setEditUser] = useState(null);
+  // <<<<---- Edit එකට අදාළ state අයින් කරා ---->>>>
   const [deleteUser, setDeleteUser] = useState(null);
-  const [newRole, setNewRole] = useState('');
 
   const fetchData = async () => {
     setLoading(true);
@@ -52,26 +50,7 @@ const AdminDashboard = () => {
 
   useEffect(() => { fetchData(); }, []);
   
-  // --- Handler Functions ---
-  const handleOpenEdit = (user) => {
-    setEditUser(user);
-    setNewRole(user.role);
-  };
-  const handleCloseEdit = () => setEditUser(null);
-
-  const handleRoleUpdate = async () => {
-    const token = sessionStorage.getItem('token');
-    try {
-      await axios.put(`http://localhost:5000/api/admin/users/${editUser._id}/role`, 
-        { role: newRole },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      fetchData(); // Refresh data
-      handleCloseEdit();
-    } catch (err) {
-      alert(err.response?.data?.msg || 'Failed to update role.');
-    }
-  };
+  // <<<<---- Edit එකට අදාළ handler functions අයින් කරා ---->>>>
 
   const handleOpenDelete = (user) => setDeleteUser(user);
   const handleCloseDelete = () => setDeleteUser(null);
@@ -82,7 +61,7 @@ const AdminDashboard = () => {
       await axios.delete(`http://localhost:5000/api/admin/users/${deleteUser._id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      fetchData(); // Refresh data
+      fetchData();
       handleCloseDelete();
     } catch (err) {
       alert(err.response?.data?.msg || 'Failed to delete user.');
@@ -102,19 +81,12 @@ const AdminDashboard = () => {
         <Grid item xs={12} sm={6} md={4}><StatCard title="Total Orders" value={stats.totalOrders} icon={<ShoppingCartIcon />} color="#4caf50" /></Grid>
       </Grid>
 
-      {/* <<<<---- NEW: User Management Section ---->>>> */}
+      {/* --- User Management Section --- */}
       <Typography variant="h5" gutterBottom fontWeight="bold">User Management</Typography>
       <Paper elevation={3} sx={{ p: 2 }}>
         <TableContainer>
           <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell>Role</TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
+            <TableHead><TableRow><TableCell>Name</TableCell><TableCell>Email</TableCell><TableCell>Role</TableCell><TableCell align="right">Actions</TableCell></TableRow></TableHead>
             <TableBody>
               {users.map((user) => (
                 <TableRow key={user._id}>
@@ -122,7 +94,7 @@ const AdminDashboard = () => {
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.role}</TableCell>
                   <TableCell align="right">
-                    <Tooltip title="Update Role"><IconButton onClick={() => handleOpenEdit(user)}><EditIcon /></IconButton></Tooltip>
+                    {/* <<<<---- Edit IconButton එක අයින් කරා ---->>>> */}
                     <Tooltip title="Delete User"><IconButton color="error" onClick={() => handleOpenDelete(user)}><DeleteIcon /></IconButton></Tooltip>
                   </TableCell>
                 </TableRow>
@@ -132,34 +104,13 @@ const AdminDashboard = () => {
         </TableContainer>
       </Paper>
 
-      {/* --- Dialog for Editing Role --- */}
-      <Dialog open={!!editUser} onClose={handleCloseEdit}>
-        <DialogTitle>Update Role for {editUser?.name}</DialogTitle>
-        <DialogContent>
-          <FormControl fullWidth sx={{mt: 2}}>
-            <Select value={newRole} onChange={(e) => setNewRole(e.target.value)}>
-              <MenuItem value="user">User</MenuItem>
-              <MenuItem value="owner">Owner</MenuItem>
-              <MenuItem value="admin">Admin</MenuItem>
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseEdit}>Cancel</Button>
-          <Button onClick={handleRoleUpdate} variant="contained">Save</Button>
-        </DialogActions>
-      </Dialog>
+      {/* <<<<---- Edit Dialog එක සම්පූර්ණයෙන්ම අයින් කරා ---->>>> */}
       
       {/* --- Dialog for Deleting User --- */}
       <Dialog open={!!deleteUser} onClose={handleCloseDelete}>
         <DialogTitle>Confirm Deletion</DialogTitle>
-        <DialogContent>
-            <Typography>Are you sure you want to delete the user <strong>{deleteUser?.name}</strong>? This action cannot be undone.</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDelete}>Cancel</Button>
-          <Button onClick={handleDeleteUser} color="error" variant="contained">Delete</Button>
-        </DialogActions>
+        <DialogContent><Typography>Are you sure you want to delete <strong>{deleteUser?.name}</strong>? This action cannot be undone.</Typography></DialogContent>
+        <DialogActions><Button onClick={handleCloseDelete}>Cancel</Button><Button onClick={handleDeleteUser} color="error" variant="contained">Delete</Button></DialogActions>
       </Dialog>
     </Container>
   );
