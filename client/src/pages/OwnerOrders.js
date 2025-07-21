@@ -1,5 +1,3 @@
-// src/pages/OwnerOrders.js
-
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
@@ -15,14 +13,17 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import PersonIcon from '@mui/icons-material/Person';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import { useTheme } from '@mui/material/styles';
 
 const OwnerOrders = () => {
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const theme = useTheme();
 
   useEffect(() => {
     fetchOrders();
+    // eslint-disable-next-line
   }, []);
 
   const fetchOrders = () => {
@@ -31,9 +32,9 @@ const OwnerOrders = () => {
     axios.get('http://localhost:5000/api/orders/my', {
       headers: { Authorization: `Bearer ${token}` }
     })
-    .then(res => setOrders(res.data))
-    .catch(() => setSnackbar({ open: true, message: 'Failed to fetch orders', severity: 'error' }))
-    .finally(() => setIsLoading(false));
+      .then(res => setOrders(res.data))
+      .catch(() => setSnackbar({ open: true, message: 'Failed to fetch orders', severity: 'error' }))
+      .finally(() => setIsLoading(false));
   };
 
   const updateOrderStatus = (orderId, status) => {
@@ -41,11 +42,11 @@ const OwnerOrders = () => {
     axios.put(`http://localhost:5000/api/orders/${orderId}/status`, { status }, {
       headers: { Authorization: `Bearer ${token}` }
     })
-    .then(() => {
-      setSnackbar({ open: true, message: `Order status updated to ${status}!`, severity: 'success' });
-      fetchOrders();
-    })
-    .catch(() => setSnackbar({ open: true, message: 'Failed to update status', severity: 'error' }));
+      .then(() => {
+        setSnackbar({ open: true, message: `Order status updated to ${status}!`, severity: 'success' });
+        fetchOrders();
+      })
+      .catch(() => setSnackbar({ open: true, message: 'Failed to update status', severity: 'error' }));
   };
 
   const getStatusChipColor = (status) => {
@@ -54,12 +55,11 @@ const OwnerOrders = () => {
       case 'accepted': return 'info';
       case 'completed': return 'success';
       case 'rejected': return 'error';
-      case 'expired': return 'default'; // 'expired' status එකට color එක add කරා
+      case 'expired': return 'default';
       default: return 'default';
     }
   };
 
-  // Location-wise item summary for today's active orders
   const locationItemTotals = orders
     .filter(order => order.status === 'accepted' || order.status === 'completed')
     .reduce((acc, order) => {
@@ -80,19 +80,26 @@ const OwnerOrders = () => {
   }
 
   return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: 4 }}>
+    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: 4, transition: 'background 0.2s' }}>
       <Container maxWidth="lg">
         <Typography variant="h4" fontWeight="bold" color="primary.main" align="center" mb={4}>
           Manage Today's Orders
         </Typography>
 
         {/* Order Summary Card for Today */}
-        <Card sx={{ mb: 4, borderRadius: 3, boxShadow: 3 }}>
+        <Card sx={{ mb: 4, borderRadius: 3, boxShadow: theme.shadows[3], backgroundColor: theme.palette.background.paper }}>
           <CardContent>
             <Typography variant="h6" fontWeight={600} mb={2}>Order Aggregation for Today</Typography>
             {Object.keys(locationItemTotals).length > 0 ? (
               Object.entries(locationItemTotals).map(([loc, items]) => (
-                <Accordion key={loc} sx={{ '&:before': { display: 'none' }, boxShadow: 'none', border: '1px solid #e0e0e0' }}>
+                <Accordion
+                  key={loc}
+                  sx={{
+                    '&:before': { display: 'none' },
+                    boxShadow: 'none',
+                    border: `1px solid ${theme.palette.divider}`,
+                    bgcolor: theme.palette.background.paper
+                  }}>
                   <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                     <LocationOnIcon color="action" sx={{ mr: 1 }} />
                     <Typography fontWeight={500}>Location: {loc}</Typography>
@@ -125,7 +132,15 @@ const OwnerOrders = () => {
           ) : (
             orders.map(order => (
               <Grid item xs={12} md={6} lg={4} key={order._id}>
-                <Card sx={{ borderRadius: 3, boxShadow: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <Card
+                  sx={{
+                    borderRadius: 3,
+                    boxShadow: theme.shadows[3],
+                    backgroundColor: theme.palette.background.paper,
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column'
+                  }}>
                   <CardContent sx={{ flexGrow: 1 }}>
                     <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
                       <Typography variant="h6" fontWeight={600}>{order.shop?.shopName}</Typography>
@@ -134,16 +149,15 @@ const OwnerOrders = () => {
                         color={getStatusChipColor(order.status)}
                         size="small"
                         sx={{ textTransform: 'capitalize' }}
-                        onClick={() => {}} // Dummy onClick to prevent MUI bug
                       />
                     </Stack>
                     <Stack direction="row" alignItems="center" spacing={1} mb={1}>
-                       <PersonIcon color="action" fontSize="small" />
-                       <Typography variant="body2">{order.user?.name} ({order.user?.email})</Typography>
+                      <PersonIcon color="action" fontSize="small" />
+                      <Typography variant="body2">{order.user?.name} ({order.user?.email})</Typography>
                     </Stack>
                     <Stack direction="row" alignItems="center" spacing={1} mb={1}>
-                       <ReceiptLongIcon color="action" fontSize="small" />
-                       <Typography variant="body2" fontWeight={500}>Total: Rs.{order.total}</Typography>
+                      <ReceiptLongIcon color="action" fontSize="small" />
+                      <Typography variant="body2" fontWeight={500}>Total: Rs.{order.total}</Typography>
                     </Stack>
                     <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                       <LocationOnIcon fontSize="small" sx={{ mr: 0.5 }} />
@@ -160,7 +174,7 @@ const OwnerOrders = () => {
                       ))}
                     </List>
                   </CardContent>
-                  <CardActions sx={{ p: 2, bgcolor: '#f5f5f5' }}>
+                  <CardActions sx={{ p: 2, bgcolor: theme.palette.background.default }}>
                     {order.status === 'pending' && (
                       <Stack direction="row" spacing={1} width="100%">
                         <Button fullWidth variant="contained" color="success" startIcon={<CheckCircleOutlineIcon />} onClick={() => updateOrderStatus(order._id, 'accepted')}>Accept</Button>
@@ -180,8 +194,10 @@ const OwnerOrders = () => {
           )}
         </Grid>
       </Container>
-      
-      <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={() => setSnackbar({ ...snackbar, open: false })} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+
+      <Snackbar open={snackbar.open} autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
         <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: '100%' }}>
           {snackbar.message}
         </Alert>

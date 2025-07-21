@@ -18,7 +18,8 @@ const getStatusProps = (status) => {
   switch (status) {
     case 'completed': return { label: 'Completed', color: 'success', icon: <CheckCircleOutlineIcon /> };
     case 'accepted': return { label: 'Accepted', color: 'info', icon: <CheckCircleOutlineIcon /> };
-    case 'rejected': case 'cancelled': return { label: 'Rejected', color: 'error', icon: <ErrorOutlineIcon /> };
+    case 'rejected': return { label: 'Rejected', color: 'error', icon: <ErrorOutlineIcon /> };
+    case 'cancelled': return { label: 'Cancelled', color: 'error', icon: <ErrorOutlineIcon /> };
     case 'expired': return { label: 'Expired', color: 'default', icon: <ErrorOutlineIcon /> };
     default: return { label: 'Pending', color: 'warning', icon: <PendingIcon /> };
   }
@@ -26,33 +27,42 @@ const getStatusProps = (status) => {
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '';
-  return new Date(dateStr).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return new Date(dateStr).toLocaleString('en-US', {
+    year: 'numeric', month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
 };
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
   return (
-    <div role="tabpanel" hidden={value !== index} id={`order-tabpanel-${index}`} aria-labelledby={`order-tab-${index}`} {...other}>
-      {value === index && (<Box sx={{ pt: 3 }}>{children}</Box>)}
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`order-tabpanel-${index}`}
+      aria-labelledby={`order-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
     </div>
   );
 }
 
-const OrderCard = ({ order, onDeleteClick }) => {
+const OrderCard = ({ order, onDeleteClick, onCancelClick, canDelete }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const statusProps = getStatusProps(order.status);
   const theme = useTheme();
+  const { label, color, icon } = getStatusProps(order.status);
 
   return (
     <Card
       sx={{
         mb: 2,
         borderRadius: 3,
-        // theme-aware background!
         backgroundColor: theme.palette.background.paper,
         boxShadow: theme.shadows[10],
         transition: "background 0.15s"
-      }}>
+      }}
+    >
       <CardContent>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={6}>
@@ -61,28 +71,44 @@ const OrderCard = ({ order, onDeleteClick }) => {
                 <StorefrontIcon />
               </Avatar>
               <Box>
-                <Typography variant="h6" fontWeight="600">{order.shop?.shopName || 'N/A'}</Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Typography variant="h6" fontWeight="600">
+                  {order.shop?.shopName || 'N/A'}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                >
                   <CalendarTodayIcon fontSize="inherit" /> {formatDate(order.createdAt)}
                 </Typography>
               </Box>
             </Box>
           </Grid>
           <Grid item xs={12} md={6} textAlign={{ xs: 'left', md: 'right' }}>
-            <Chip icon={statusProps.icon} label={statusProps.label} color={statusProps.color}
-              size="small" sx={{ mb: 1, textTransform: 'capitalize', fontWeight: 500 }} />
-            <Typography variant="h6" fontWeight="600">Total: Rs. {order.total.toFixed(2)}</Typography>
+            <Chip
+              icon={icon}
+              label={label}
+              color={color}
+              size="small"
+              sx={{ mb: 1, textTransform: 'capitalize', fontWeight: 500 }}
+            />
+            <Typography variant="h6" fontWeight="600">
+              Total: Rs. {order.total.toFixed(2)}
+            </Typography>
           </Grid>
         </Grid>
-        <Divider sx={{
-          my: 2,
-          borderColor: theme.palette.mode === 'dark'
-            ? theme.palette.grey[800] : theme.palette.grey[200]
-        }} />
+        <Divider
+          sx={{
+            my: 2,
+            borderColor: theme.palette.mode === 'dark'
+              ? theme.palette.grey[800]
+              : theme.palette.grey[200]
+          }}
+        />
         <Box>
           <Button
             size="small"
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={() => setIsExpanded(!isExpanded)} // Arrow function ensures this is a function reference
             sx={{ color: 'primary.main', fontWeight: 500 }}
           >
             {isExpanded ? 'Hide Items' : 'View Items'}
@@ -96,7 +122,10 @@ const OrderCard = ({ order, onDeleteClick }) => {
             }}>
               {order.items.map((item, idx) => (
                 <ListItem key={idx} disablePadding>
-                  <ListItemText primary={item.name} secondary={`Qty: ${item.qty} | Rs. ${item.price} each`} />
+                  <ListItemText
+                    primary={item.name}
+                    secondary={`Qty: ${item.qty} | Rs. ${item.price} each`}
+                  />
                   <Typography variant="body2" fontWeight="500">
                     Rs. {(item.price * item.qty).toFixed(2)}
                   </Typography>
@@ -105,10 +134,28 @@ const OrderCard = ({ order, onDeleteClick }) => {
             </List>
           )}
         </Box>
-        {(new Date() - new Date(order.createdAt)) > 24 * 60 * 60 * 1000 && (
+        {order.status === 'pending' && (
+          <Box mt={2} textAlign="right">
+            <Tooltip title="Cancel this order">
+              <Button
+                color="error"
+                variant="outlined"
+                size="small"
+                onClick={() => onCancelClick(order._id)} // Arrow function prevents immediate execution
+              >
+                Cancel
+              </Button>
+            </Tooltip>
+          </Box>
+        )}
+        {canDelete && (
           <Box mt={2} textAlign="right">
             <Tooltip title="Delete this order permanently">
-              <IconButton color="error" onClick={() => onDeleteClick(order._id)} size="small">
+              <IconButton
+                color="error"
+                onClick={() => onDeleteClick(order._id)} // Arrow function prevents immediate execution
+                size="small"
+              >
                 <DeleteIcon />
               </IconButton>
             </Tooltip>
@@ -125,22 +172,40 @@ const UserOrders = () => {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [loading, setLoading] = useState(true);
   const [deleteDialog, setDeleteDialog] = useState({ open: false, orderId: null });
+  const [cancelDialog, setCancelDialog] = useState({ open: false, orderId: null });
   const [tabIndex, setTabIndex] = useState(0);
+  const [tick, setTick] = useState(0);
 
-  useEffect(() => { fetchOrders(); }, []);
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTick((prev) => prev + 1);
+    }, 60000); // Update every 60 seconds to refresh order classifications
+    return () => clearInterval(timer);
+  }, []);
 
   const fetchOrders = () => {
     setLoading(true);
     const token = sessionStorage.getItem('token');
-    axios.get('http://localhost:5000/api/orders/my-orders', { headers: { Authorization: `Bearer ${token}` }})
+    axios.get('http://localhost:5000/api/orders/my-orders', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
       .then(res => { setOrders(res.data); setLoading(false); })
-      .catch(() => { setSnackbar({ open: true, message: 'Failed to fetch orders', severity: 'error' }); setLoading(false); });
+      .catch(() => {
+        setSnackbar({ open: true, message: 'Failed to fetch orders', severity: 'error' });
+        setLoading(false);
+      });
   };
 
   const deleteOrder = async (orderId) => {
     const token = sessionStorage.getItem('token');
     try {
-      await axios.delete(`http://localhost:5000/api/orders/${orderId}`, { headers: { Authorization: `Bearer ${token}` }});
+      await axios.delete(`http://localhost:5000/api/orders/${orderId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setSnackbar({ open: true, message: 'Order deleted!', severity: 'success' });
       fetchOrders();
     } catch (err) {
@@ -150,19 +215,40 @@ const UserOrders = () => {
     }
   };
 
+  const cancelOrder = async (orderId) => {
+    const token = sessionStorage.getItem('token');
+    try {
+      await axios.patch(`http://localhost:5000/api/orders/${orderId}/cancel`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSnackbar({ open: true, message: 'Order cancelled!', severity: 'success' });
+      fetchOrders();
+    } catch (err) {
+      setSnackbar({ open: true, message: err.response?.data?.msg || "Cancel failed", severity: 'error' });
+    } finally {
+      setCancelDialog({ open: false, orderId: null });
+    }
+  };
+
   const now = new Date();
-  const recentOrders = orders.filter(order => (now - new Date(order.createdAt)) <= 24 * 60 * 60 * 1000).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  const olderOrders = orders.filter(order => (now - new Date(order.createdAt)) > 24 * 60 * 60 * 1000).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const recentOrders = orders
+    .filter(order => (now - new Date(order.createdAt)) <= 24 * 60 * 60 * 1000)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const olderOrders = orders
+    .filter(order => (now - new Date(order.createdAt)) > 24 * 60 * 60 * 1000)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   const handleTabChange = (event, newValue) => { setTabIndex(newValue); };
 
   return (
-    <Box sx={{
-      bgcolor: theme.palette.background.default,
-      minHeight: '100vh',
-      py: 4,
-      transition: 'background 0.2s',
-    }}>
+    <Box
+      sx={{
+        bgcolor: theme.palette.background.default,
+        minHeight: '100vh',
+        py: 4,
+        transition: 'background 0.2s',
+      }}
+    >
       <Container maxWidth="md">
         <Typography variant="h4" gutterBottom fontWeight="700" color="primary.main" align="center">
           My Orders
@@ -185,7 +271,13 @@ const UserOrders = () => {
             <TabPanel value={tabIndex} index={0}>
               {recentOrders.length > 0 ? (
                 recentOrders.map(order =>
-                  <OrderCard key={order._id} order={order} onDeleteClick={(id) => setDeleteDialog({ open: true, orderId: id })} />
+                  <OrderCard
+                    key={order._id}
+                    order={order}
+                    onDeleteClick={(id) => setDeleteDialog({ open: true, orderId: id })}
+                    onCancelClick={(id) => setCancelDialog({ open: true, orderId: id })}
+                    canDelete={false}
+                  />
                 )
               ) : (
                 <Typography align="center" mt={4} color="text.secondary">
@@ -196,7 +288,13 @@ const UserOrders = () => {
             <TabPanel value={tabIndex} index={1}>
               {olderOrders.length > 0 ? (
                 olderOrders.map(order =>
-                  <OrderCard key={order._id} order={order} onDeleteClick={(id) => setDeleteDialog({ open: true, orderId: id })} />
+                  <OrderCard
+                    key={order._id}
+                    order={order}
+                    onDeleteClick={(id) => setDeleteDialog({ open: true, orderId: id })}
+                    onCancelClick={(id) => setCancelDialog({ open: true, orderId: id })}
+                    canDelete={true}
+                  />
                 )
               ) : (
                 <Typography align="center" mt={4} color="text.secondary">
@@ -206,17 +304,41 @@ const UserOrders = () => {
             </TabPanel>
           </Box>
         )}
+
+        {/* Cancel Confirmation */}
+        <Dialog open={cancelDialog.open} onClose={() => setCancelDialog({ open: false, orderId: null })}>
+          <DialogTitle>Confirm Cancel</DialogTitle>
+          <DialogContent>
+            <Typography>Are you sure you want to cancel this order?</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setCancelDialog({ open: false, orderId: null })}>No</Button> {/* Arrow function ensures proper handling */}
+            <Button color="error" variant="contained" onClick={() => cancelOrder(cancelDialog.orderId)}> {/* Arrow function prevents immediate execution */}
+              Yes, Cancel
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Delete Confirmation */}
         <Dialog open={deleteDialog.open} onClose={() => setDeleteDialog({ open: false, orderId: null })}>
           <DialogTitle>Confirm Deletion</DialogTitle>
           <DialogContent>
             <Typography>Are you sure you want to permanently delete this order? This action cannot be undone.</Typography>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDeleteDialog({ open: false, orderId: null })}>Cancel</Button>
-            <Button color="error" variant="contained" onClick={() => deleteOrder(deleteDialog.orderId)}>Delete</Button>
+            <Button onClick={() => setDeleteDialog({ open: false, orderId: null })}>Cancel</Button> {/* Arrow function ensures proper handling */}
+            <Button color="error" variant="contained" onClick={() => deleteOrder(deleteDialog.orderId)}> {/* Arrow function prevents immediate execution */}
+              Delete
+            </Button>
           </DialogActions>
         </Dialog>
-        <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar({ ...snackbar, open: false })} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={4000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
           <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: '100%' }}>
             {snackbar.message}
           </Alert>

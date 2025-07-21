@@ -1,5 +1,3 @@
-// server/controllers/orderController.js
-
 const Order = require('../models/Order');
 const Shop = require('../models/Shop');
 
@@ -47,11 +45,11 @@ exports.getMyOrders = async (req, res) => {
   }
 };
 
-// 3. Owner: Get orders for their shop(s)
+// 3. Owner: Get shop orders
 exports.getOwnerOrders = async (req, res) => {
   try {
     if (req.user.role !== 'owner') return res.status(403).json({ msg: 'Only owners can view orders.' });
-    
+
     const today = new Date();
     const startOfToday = new Date(today.setHours(0, 0, 0, 0));
 
@@ -60,9 +58,9 @@ exports.getOwnerOrders = async (req, res) => {
       isArchived: false,
       createdAt: { $gte: startOfToday }
     })
-    .populate('user', 'name email')
-    .populate('shop', 'shopName')
-    .sort({ createdAt: -1 });
+      .populate('user', 'name email')
+      .populate('shop', 'shopName')
+      .sort({ createdAt: -1 });
 
     res.json(orders);
   } catch (err) {
@@ -71,7 +69,7 @@ exports.getOwnerOrders = async (req, res) => {
   }
 };
 
-// 4. Owner: Update overall order status
+// 4. Owner: Update order status
 exports.updateOrderStatus = async (req, res) => {
   try {
     if (req.user.role !== 'owner') return res.status(403).json({ msg: 'Only owners can update orders.' });
@@ -89,19 +87,15 @@ exports.updateOrderStatus = async (req, res) => {
   }
 };
 
-// <<<<---- NEW FUNCTION: Delete an order ---->>>>
+// 5. User: Delete old order
 exports.deleteOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ msg: 'Order not found' });
 
-    if (!order) {
-      return res.status(404).json({ msg: 'Order not found' });
-    }
-
-    if (order.user.toString() !== req.user.id) {
+    if (order.user.toString() !== req.user._id.toString()) {
       return res.status(401).json({ msg: 'User not authorized to delete this order' });
     }
-    
     if ((new Date() - new Date(order.createdAt)) < 24 * 60 * 60 * 1000) {
       return res.status(400).json({ msg: 'Recent orders cannot be deleted.' });
     }
@@ -111,5 +105,27 @@ exports.deleteOrder = async (req, res) => {
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
+  }
+};
+
+// 6. User: Cancel pending order
+exports.cancelOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ msg: 'Order not found' });
+
+    if (order.user.toString() !== req.user._id.toString()) {
+      return res.status(401).json({ msg: 'Unauthorized' });
+    }
+    if (order.status !== 'pending') {
+      return res.status(400).json({ msg: 'Cannot cancel this order now' });
+    }
+
+    order.status = 'cancelled';
+    await order.save();
+    res.json({ msg: 'Order cancelled', order });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error.' });
   }
 };
