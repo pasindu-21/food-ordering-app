@@ -19,6 +19,9 @@ import DailyReports from './pages/DailyReports';
 import AdminDashboard from './pages/AdminDashboard';
 // FIX: correct import path, use "components" (plural)
 import ColorModeProvider from "./context/ColorModeContext"; 
+import About from './pages/About';
+import Contact from './pages/Contact';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 function App() {
   return (
@@ -46,7 +49,9 @@ function App() {
           <Route path="/owner-orders" element={<PrivateRoute><OwnerOrders /></PrivateRoute>} />
           <Route path="/daily-reports" element={<PrivateRoute><DailyReports /></PrivateRoute>} />
           <Route path="/admin-dashboard" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
-
+             <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
         </Routes>
         <Footer />
       </Router>
