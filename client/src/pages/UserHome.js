@@ -21,7 +21,11 @@ const StyledCard = styled(Card)(({ theme }) => ({
   '&:hover': {
     transform: 'translateY(-5px)'
   },
-  background: 'linear-gradient(145deg, #f5f5f5, #ffffff)'
+  // DARK MODE: use a dark gradient, otherwise use your old gradient
+  background:
+    theme.palette.mode === 'dark'
+      ? 'linear-gradient(145deg, #232323, #111418 90%)'
+      : 'linear-gradient(145deg, #f5f5f5, #ffffff)'
 }));
 
 const ActionButton = styled(Button)(({ theme }) => ({
@@ -78,7 +82,6 @@ const UserHome = () => {
                   Explore Restaurants
                 </ActionButton>
               </Grid>
-
               <Grid item xs={12} sm={6} md={5}>
                 <ActionButton
                   fullWidth

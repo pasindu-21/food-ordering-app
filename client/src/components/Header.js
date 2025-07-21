@@ -1,13 +1,15 @@
-// src/components/Header.js
-
 import React from 'react';
-import { AppBar, Toolbar, Typography, Box, Button } from '@mui/material';
+import { AppBar, Toolbar, Typography, Box, Button, IconButton, Tooltip } from '@mui/material';
 import LogoutButton from './LogoutButton';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
+import { useColorMode } from '../context/ColorModeContext';
 
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { mode, toggleColorMode } = useColorMode();
 
   let role = null;
   try {
@@ -15,13 +17,9 @@ const Header = () => {
   } catch {
     role = null;
   }
-  
-  if (location.pathname === '/') {
-    return null;
-  }
+  if (location.pathname === '/') return null;
 
   const renderNavButtons = () => {
-    // <<<<---- Admin Links ---->>>>
     if (role === 'admin') {
       return (
         <>
@@ -29,9 +27,7 @@ const Header = () => {
           <LogoutButton />
         </>
       );
-    } 
-    // Owner Links
-    else if (role === 'owner') {
+    } else if (role === 'owner') {
       return (
         <>
           <Button component={Link} to="/owner-home" color="inherit">Home</Button>
@@ -41,9 +37,7 @@ const Header = () => {
           <LogoutButton />
         </>
       );
-    } 
-    // Logged-in User Links
-    else if (role === 'user') {
+    } else if (role === 'user') {
       return (
         <>
           <Button component={Link} to="/user-home" color="inherit">Home</Button>
@@ -52,9 +46,7 @@ const Header = () => {
           <LogoutButton />
         </>
       );
-    } 
-    // Guest Links
-    else {
+    } else {
       return (
         <Button component={Link} to="/" color="inherit">Login / Register</Button>
       );
@@ -71,10 +63,21 @@ const Header = () => {
   return (
     <AppBar position="static" color="primary" elevation={2}>
       <Toolbar>
-        <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700, cursor: 'pointer' }} onClick={handleLogoClick}>
+        <Typography
+          variant="h6"
+          sx={{ fontWeight: 700, cursor: 'pointer', flexGrow: 1 }}
+          onClick={handleLogoClick}
+        >
           FoodHub
         </Typography>
-        <Box>{renderNavButtons()}</Box>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {renderNavButtons()}
+          <Tooltip title={mode === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}>
+            <IconButton color="inherit" onClick={toggleColorMode}>
+              {mode === "dark" ? <Brightness7Icon /> : <Brightness4Icon />}
+            </IconButton>
+          </Tooltip>
+        </Box>
       </Toolbar>
     </AppBar>
   );

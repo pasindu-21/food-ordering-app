@@ -1,7 +1,7 @@
 // src/App.js
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+// REMOVE ThemeProvider, createTheme import
 
 // Component & Page Imports
 import AuthForm from './components/AuthForm';
@@ -17,14 +17,12 @@ import UserOrders from './pages/UserOrders';
 import OwnerOrders from './pages/OwnerOrders';
 import DailyReports from './pages/DailyReports';
 import AdminDashboard from './pages/AdminDashboard';
-
-const theme = createTheme({
-  // You can customize your theme palette here
-});
+// FIX: correct import path, use "components" (plural)
+import ColorModeProvider from "./context/ColorModeContext"; 
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
+    <ColorModeProvider>
       <Router>
         <Header />
         <Routes>
@@ -52,7 +50,7 @@ function App() {
         </Routes>
         <Footer />
       </Router>
-    </ThemeProvider>
+    </ColorModeProvider>
   );
 }
 
