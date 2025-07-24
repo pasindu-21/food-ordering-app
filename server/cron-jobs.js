@@ -1,31 +1,31 @@
-// server/cron-jobs.js (PRODUCTION VERSION)
+// server/cron-jobs.js
 
 const cron = require('node-cron');
 const Order = require('./models/Order');
 const DailySummary = require('./models/DailySummary');
 
 const startDailyJobs = () => {
-  // --- JOB 1: DAILY SUMMARY GENERATION (Runs every day at midnight) ---
+  // Test කරන්න විනාඩි 2කට සැරයක් run වෙන්න හදලා තියෙන්නේ
   cron.schedule('0 0 * * *', async () => {
-    console.log('[CRON - DAILY] Running daily job: Archiving and Summarizing...');
-    
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const startOfYesterday = new Date(yesterday.setHours(0, 0, 0, 0));
-    const endOfYesterday = new Date(yesterday.setHours(23, 59, 59, 999));
+    console.log('Running daily automation job in TEST MODE...');
+
+    // <<<<---- TEST કરવાට පමණයි: අපි 'yesterday' වෙනුවට 'today' data process කරනවා ---->>>>
+    const today = new Date();
+    const startOfToday = new Date(today.setHours(0, 0, 0, 0));
+    const endOfToday = new Date(today.setHours(23, 59, 59, 999));
 
     try {
-      // Step 1: Expire Pending Orders from yesterday
+      // 1. Expire Pending Orders from today (for testing)
       await Order.updateMany(
-        { status: 'pending', createdAt: { $lte: endOfYesterday }, isArchived: false },
+        { status: 'pending', createdAt: { $lte: endOfToday }, isArchived: false },
         { $set: { status: 'expired' } }
       );
-      console.log('[CRON - DAILY] Checked for pending orders to expire.');
+      console.log('Checked for pending orders to expire...');
 
-      // Step 2: Generate Daily Summaries for COMPLETED orders from yesterday
+      // 2. Generate Daily Summaries for COMPLETED orders from today
       const completedOrders = await Order.find({
         status: 'completed',
-        updatedAt: { $gte: startOfYesterday, $lte: endOfYesterday }
+        updatedAt: { $gte: startOfToday, $lte: endOfToday }
       });
 
       if (completedOrders.length > 0) {
@@ -42,50 +42,33 @@ const startDailyJobs = () => {
             ownerSummaries[ownerId].itemSummary.set(item.name, currentQty + item.qty);
           });
         }
+
         for (const ownerId in ownerSummaries) {
           await DailySummary.findOneAndUpdate(
-            { owner: ownerId, date: startOfYesterday },
+            { owner: ownerId, date: startOfToday }, // Use startOfToday for the date
             { $set: ownerSummaries[ownerId] },
             { upsert: true }
           );
         }
-        console.log(`[CRON - DAILY] Generated daily summaries for ${Object.keys(ownerSummaries).length} owners.`);
+        console.log(`Generated daily summaries for ${Object.keys(ownerSummaries).length} owners.`);
       } else {
-        console.log('[CRON - DAILY] No completed orders from yesterday for summary generation.');
+        console.log('No completed orders found for summary generation today.');
       }
 
-      // Step 3: Archive all "closed" orders from yesterday
+      // 3. Archive all "closed" orders from today
       await Order.updateMany(
-        { status: { $in: ['completed', 'rejected', 'expired'] }, createdAt: { $lte: endOfYesterday }, isArchived: false },
+        {
+          status: { $in: ['completed', 'rejected', 'expired'] },
+          createdAt: { $lte: endOfToday },
+          isArchived: false
+        },
         { $set: { isArchived: true } }
       );
-      console.log('[CRON - DAILY] Checked for old orders to archive.');
-      console.log('[CRON - DAILY] Daily job finished successfully.');
+      console.log('Checked for old orders to archive...');
+      console.log('Daily job (TEST MODE) finished successfully.');
 
     } catch (error) {
-      console.error('[CRON - DAILY] Error during daily job execution:', error);
-    }
-  }, { timezone: "Asia/Colombo" });
-
-  // --- JOB 2: MONTHLY CLEANUP (Checks every day at 11:58 PM) ---
-  cron.schedule('58 23 * * *', async () => {
-    console.log('[CRON - MONTHLY CHECK] Running monthly cleanup check...');
-    const today = new Date();
-    
-    // Check if today is the last day of the month
-    const isLastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate() === today.getDate();
-    
-    if (isLastDay) {
-      console.log('[CRON - MONTHLY] Today is the last day of the month. Starting cleanup...');
-      try {
-        // Deletes all documents in the DailySummary collection
-        const result = await DailySummary.deleteMany({});
-        console.log(`[CRON - MONTHLY] Successfully deleted ${result.deletedCount} summary reports. Ready for the new month!`);
-      } catch (error) {
-        console.error('[CRON - MONTHLY] Error during monthly cleanup:', error);
-      }
-    } else {
-        console.log('[CRON - MONTHLY CHECK] Not the last day of the month. Skipping cleanup.');
+      console.error('Error during daily job execution (TEST MODE):', error);
     }
   }, { timezone: "Asia/Colombo" });
 };
