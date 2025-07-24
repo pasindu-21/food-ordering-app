@@ -1,28 +1,26 @@
-// server/cron-jobs.js
-
 const cron = require('node-cron');
 const Order = require('./models/Order');
 const DailySummary = require('./models/DailySummary');
 
 const startDailyJobs = () => {
-  // Test කරන්න විනාඩි 2කට සැරයක් run වෙන්න හදලා තියෙන්නේ
+  // Test mode: run every 2 minutes (*/2 * * * *)
   cron.schedule('0 0 * * *', async () => {
-    console.log('Running daily automation job in TEST MODE...');
+    console.log('Running DAILY JOB in TEST MODE for TODAY ...');
 
-    // <<<<---- TEST કરવાට පමණයි: අපි 'yesterday' වෙනුවට 'today' data process කරනවා ---->>>>
-    const today = new Date();
-    const startOfToday = new Date(today.setHours(0, 0, 0, 0));
-    const endOfToday = new Date(today.setHours(23, 59, 59, 999));
+    // 🟢 USE "TODAY" (`startOfToday` / `endOfToday`) INSTEAD of "yesterday"
+    const now = new Date();
+    const startOfToday = new Date(now.setHours(0, 0, 0, 0));
+    const endOfToday = new Date(now.setHours(23, 59, 59, 999));
 
     try {
-      // 1. Expire Pending Orders from today (for testing)
+      // 1. Expire pending orders from **today**
       await Order.updateMany(
         { status: 'pending', createdAt: { $lte: endOfToday }, isArchived: false },
         { $set: { status: 'expired' } }
       );
-      console.log('Checked for pending orders to expire...');
+      console.log('Checked for pending orders to expire (today)...');
 
-      // 2. Generate Daily Summaries for COMPLETED orders from today
+      // 2. Generate summaries for completed orders (today)
       const completedOrders = await Order.find({
         status: 'completed',
         updatedAt: { $gte: startOfToday, $lte: endOfToday }
@@ -42,11 +40,12 @@ const startDailyJobs = () => {
             ownerSummaries[ownerId].itemSummary.set(item.name, currentQty + item.qty);
           });
         }
-
         for (const ownerId in ownerSummaries) {
+          const summary = ownerSummaries[ownerId];
+          summary.itemSummary = Object.fromEntries(summary.itemSummary.entries());
           await DailySummary.findOneAndUpdate(
-            { owner: ownerId, date: startOfToday }, // Use startOfToday for the date
-            { $set: ownerSummaries[ownerId] },
+            { owner: ownerId, date: startOfToday },
+            { $set: summary },
             { upsert: true }
           );
         }
@@ -55,7 +54,7 @@ const startDailyJobs = () => {
         console.log('No completed orders found for summary generation today.');
       }
 
-      // 3. Archive all "closed" orders from today
+      // 3. Archive "closed" orders from today
       await Order.updateMany(
         {
           status: { $in: ['completed', 'rejected', 'expired'] },
@@ -65,10 +64,9 @@ const startDailyJobs = () => {
         { $set: { isArchived: true } }
       );
       console.log('Checked for old orders to archive...');
-      console.log('Daily job (TEST MODE) finished successfully.');
-
+      console.log('Daily job (TEST MODE today) finished successfully.');
     } catch (error) {
-      console.error('Error during daily job execution (TEST MODE):', error);
+      console.error('Error during daily job execution (test mode):', error);
     }
   }, { timezone: "Asia/Colombo" });
 };
