@@ -4,26 +4,28 @@ const DailySummary = require('./models/DailySummary');
 
 const startDailyJobs = () => {
   // Test mode: run every 2 minutes (*/2 * * * *)
+  // Use '0 0 * * *' for production
   cron.schedule('0 0 * * *', async () => {
     console.log('Running DAILY JOB in TEST MODE for TODAY ...');
 
-    // 🟢 USE "TODAY" (`startOfToday` / `endOfToday`) INSTEAD of "yesterday"
     const now = new Date();
-    const startOfToday = new Date(now.setHours(0, 0, 0, 0));
-    const endOfToday = new Date(now.setHours(23, 59, 59, 999));
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+    const endOfToday = new Date(now);
+    endOfToday.setHours(23, 59, 59, 999);
 
     try {
-      // 1. Expire pending orders from **today**
+      // 1. Expire pending orders from today
       await Order.updateMany(
         { status: 'pending', createdAt: { $lte: endOfToday }, isArchived: false },
         { $set: { status: 'expired' } }
       );
       console.log('Checked for pending orders to expire (today)...');
 
-      // 2. Generate summaries for completed orders (today)
+      // 2. Generate summaries for completed orders (created today)
       const completedOrders = await Order.find({
         status: 'completed',
-        updatedAt: { $gte: startOfToday, $lte: endOfToday }
+        createdAt: { $gte: startOfToday, $lte: endOfToday }
       });
 
       if (completedOrders.length > 0) {

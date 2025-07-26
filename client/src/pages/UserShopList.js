@@ -5,7 +5,7 @@ import OrderForm from './OrderForm';
 import {
   Container, Grid, Card, CardMedia, CardContent, CardActions, Typography,
   Button, Box, List, ListItem, ListItemText, Dialog, DialogTitle,
-  DialogContent, IconButton, DialogActions, Paper, Skeleton, Collapse, InputBase
+  DialogContent, IconButton, DialogActions, Paper, Skeleton,  InputBase
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
