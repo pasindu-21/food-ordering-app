@@ -4,29 +4,41 @@ const DailySummary = require('./models/DailySummary');
 
 const startDailyJobs = () => {
   // Test mode: run every 2 minutes (*/2 * * * *)
-  // Use '0 0 * * *' for production
+  // Production: '0 0 * * *' (midnight daily)
   cron.schedule('0 0 * * *', async () => {
     console.log('Running DAILY JOB in TEST MODE for TODAY ...');
 
     const now = new Date();
-    const startOfToday = new Date(now);
-    startOfToday.setHours(0, 0, 0, 0);
-    const endOfToday = new Date(now);
-    endOfToday.setHours(23, 59, 59, 999);
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(now);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // For production, uncomment for YESTERDAY
+    // const yesterday = new Date(now);
+    // yesterday.setDate(now.getDate() - 1);
+    // const startOfDay = new Date(yesterday);
+    // startOfDay.setHours(0, 0, 0, 0);
+    // const endOfDay = new Date(yesterday);
+    // endOfDay.setHours(23, 59, 59, 999);
 
     try {
-      // 1. Expire pending orders from today
+      // 1. Expire pending orders from the day
       await Order.updateMany(
-        { status: 'pending', createdAt: { $lte: endOfToday }, isArchived: false },
+        { status: 'pending', createdAt: { $lte: endOfDay }, isArchived: false },
         { $set: { status: 'expired' } }
       );
-      console.log('Checked for pending orders to expire (today)...');
+      console.log('Checked for pending orders to expire...');
 
-      // 2. Generate summaries for completed orders (created today)
+      // 2. Generate summaries for completed orders (created or updated in the day range)
       const completedOrders = await Order.find({
         status: 'completed',
-        createdAt: { $gte: startOfToday, $lte: endOfToday }
+        $or: [
+          { createdAt: { $gte: startOfDay, $lte: endOfDay } },
+          { updatedAt: { $gte: startOfDay, $lte: endOfDay } }
+        ]
       });
+      console.log(`Found ${completedOrders.length} completed orders for summary.`); // DEBUG LOG
 
       if (completedOrders.length > 0) {
         const ownerSummaries = {};
@@ -46,7 +58,7 @@ const startDailyJobs = () => {
           const summary = ownerSummaries[ownerId];
           summary.itemSummary = Object.fromEntries(summary.itemSummary.entries());
           await DailySummary.findOneAndUpdate(
-            { owner: ownerId, date: startOfToday },
+            { owner: ownerId, date: startOfDay },
             { $set: summary },
             { upsert: true }
           );
@@ -56,19 +68,19 @@ const startDailyJobs = () => {
         console.log('No completed orders found for summary generation today.');
       }
 
-      // 3. Archive "closed" orders from today
+      // 3. Archive "closed" orders from the day
       await Order.updateMany(
         {
           status: { $in: ['completed', 'rejected', 'expired'] },
-          createdAt: { $lte: endOfToday },
+          createdAt: { $lte: endOfDay },
           isArchived: false
         },
         { $set: { isArchived: true } }
       );
       console.log('Checked for old orders to archive...');
-      console.log('Daily job (TEST MODE today) finished successfully.');
+      console.log('Daily job (TEST MODE) finished successfully.');
     } catch (error) {
-      console.error('Error during daily job execution (test mode):', error);
+      console.error('Error during daily job execution:', error);
     }
   }, { timezone: "Asia/Colombo" });
 };

@@ -20,6 +20,7 @@ const orderSchema = new mongoose.Schema({
     default: 'pending'
   },
   location: { type: String, required: true },
+  timeSlot: { type: String, enum: ['Breakfast', 'Lunch', 'Dinner'], required: true }, // New time slot field
   isArchived: {
     type: Boolean,
     default: false
@@ -30,8 +31,7 @@ const orderSchema = new mongoose.Schema({
     required: true
   }
 }, {
-  // <<<<---- BUG FIX: මේ option එක මෙතනට add කරා ---->>>>
-  // This will automatically add `createdAt` and `updatedAt` fields
+  // Automatically add `createdAt` and `updatedAt` fields
   timestamps: true
 });
 

@@ -2,18 +2,20 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
   Box, Container, Grid, Card, CardContent, CardActions, Typography, Button, Chip,
-  Stack, CircularProgress, Snackbar, Alert, Accordion, AccordionSummary, AccordionDetails,
-  List, ListItem, ListItemIcon, ListItemText
+  Stack, CircularProgress, Snackbar, Alert, Accordion, AccordionSummary, AccordionDetails, List, ListItem, ListItemText
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import PersonIcon from '@mui/icons-material/Person';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { useTheme } from '@mui/material/styles';
+
+const timeSlots = ['Breakfast', 'Lunch', 'Dinner'];
+const locations = ['A', 'B', 'C', 'D'];
 
 const OwnerOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -21,11 +23,7 @@ const OwnerOrders = () => {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const theme = useTheme();
 
-  useEffect(() => {
-    fetchOrders();
-    // eslint-disable-next-line
-  }, []);
-
+  useEffect(() => { fetchOrders(); }, []);
   const fetchOrders = () => {
     setIsLoading(true);
     const token = sessionStorage.getItem('token');
@@ -60,67 +58,74 @@ const OwnerOrders = () => {
     }
   };
 
-  const locationItemTotals = orders
-    .filter(order => order.status === 'accepted' || order.status === 'completed')
-    .reduce((acc, order) => {
-      const loc = order.location;
-      if (!acc[loc]) acc[loc] = {};
-      order.items.forEach(item => {
-        acc[loc][item.name] = (acc[loc][item.name] || 0) + item.qty;
-      });
-      return acc;
+  // Aggregation: timeSlot -> location -> { item: qty }
+  const summary = timeSlots.reduce((acc, slot) => {
+    acc[slot] = locations.reduce((locAcc, loc) => {
+      locAcc[loc] = {};
+      return locAcc;
     }, {});
+    return acc;
+  }, {});
+
+  orders
+    .filter(order => ['accepted', 'completed'].includes(order.status))
+    .forEach(order => {
+      const slot = order.timeSlot;
+      const loc = order.location;
+      if (timeSlots.includes(slot) && locations.includes(loc)) {
+        order.items.forEach(item => {
+          summary[slot][loc][item.name] = (summary[slot][loc][item.name] || 0) + item.qty;
+        });
+      }
+    });
 
   if (isLoading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><CircularProgress /></Box>;
   }
 
   return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: 4, transition: 'background 0.2s' }}>
+    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: 4 }}>
       <Container maxWidth="lg">
         <Typography variant="h4" fontWeight="bold" color="primary.main" align="center" mb={4}>
           Manage Today's Orders
         </Typography>
 
-        {/* Order Summary Card for Today */}
-        <Card sx={{ mb: 4, borderRadius: 3, boxShadow: theme.shadows[3], backgroundColor: theme.palette.background.paper }}>
-          <CardContent>
-            <Typography variant="h6" fontWeight={600} mb={2}>Order Aggregation for Today</Typography>
-            {Object.keys(locationItemTotals).length > 0 ? (
-              Object.entries(locationItemTotals).map(([loc, items]) => (
-                <Accordion
-                  key={loc}
-                  sx={{
-                    '&:before': { display: 'none' },
-                    boxShadow: 'none',
-                    border: `1px solid ${theme.palette.divider}`,
-                    bgcolor: theme.palette.background.paper
-                  }}>
-                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <LocationOnIcon color="action" sx={{ mr: 1 }} />
-                    <Typography fontWeight={500}>Location: {loc}</Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <List dense>
-                      {Object.entries(items).map(([item, qty]) => (
-                        <ListItem key={item} disablePadding>
-                          <ListItemIcon><ShoppingCartIcon fontSize="small" /></ListItemIcon>
-                          <ListItemText primary={`${item}: ${qty} units`} />
-                        </ListItem>
-                      ))}
-                    </List>
-                  </AccordionDetails>
-                </Accordion>
-              ))
-            ) : (
-              <Typography color="text.secondary">No accepted or completed orders to summarize for today.</Typography>
-            )}
-          </CardContent>
-        </Card>
+        {/* Cards for Breakfast/Lunch/Dinner */}
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          {timeSlots.map(slot => (
+            <Grid item xs={12} md={4} key={slot}>
+              <Card sx={{ borderRadius: 3, boxShadow: theme.shadows[4] }}>
+                <CardContent>
+                  <Typography variant="h6" fontWeight={700} gutterBottom>
+                    <AccessTimeIcon sx={{ mr: 1, color: 'primary.main' }} />
+                    {slot}
+                  </Typography>
+                  {locations.map(loc => (
+                    <Accordion key={loc} sx={{ boxShadow: 'none', borderBottom: '1px solid ' + theme.palette.divider }}>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ p: 1 }}>
+                        <LocationOnIcon sx={{ mr: 1, color: 'secondary.main' }} />
+                        <Typography fontWeight={500}>{loc}</Typography>
+                      </AccordionSummary>
+                      <AccordionDetails sx={{ p: 1 }}>
+                        {Object.keys(summary[slot][loc]).length === 0 ? (
+                          <Typography color="text.secondary">No items for this location.</Typography>
+                        ) : (
+                          <List dense>
+                            {Object.entries(summary[slot][loc]).map(([item, qty]) => (
+                              <ListItem key={item} disablePadding>
+                                <ListItemText primary={`${item}: ${qty}`} />
+                              </ListItem>
+                            ))}
+                          </List>
+                        )}
+                      </AccordionDetails>
+                    </Accordion>
+                  ))}
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
 
         {/* Individual Orders List for Today */}
         <Typography variant="h5" fontWeight={600} mb={2}>All Today's Orders</Typography>
@@ -132,24 +137,11 @@ const OwnerOrders = () => {
           ) : (
             orders.map(order => (
               <Grid item xs={12} md={6} lg={4} key={order._id}>
-                <Card
-                  sx={{
-                    borderRadius: 3,
-                    boxShadow: theme.shadows[3],
-                    backgroundColor: theme.palette.background.paper,
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column'
-                  }}>
+                <Card sx={{ borderRadius: 3, boxShadow: theme.shadows[3], backgroundColor: theme.palette.background.paper, height: '100%', display: 'flex', flexDirection: 'column' }}>
                   <CardContent sx={{ flexGrow: 1 }}>
                     <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
                       <Typography variant="h6" fontWeight={600}>{order.shop?.shopName}</Typography>
-                      <Chip
-                        label={order.status}
-                        color={getStatusChipColor(order.status)}
-                        size="small"
-                        sx={{ textTransform: 'capitalize' }}
-                      />
+                      <Chip label={order.status} color={getStatusChipColor(order.status)} size="small" sx={{ textTransform: 'capitalize' }} />
                     </Stack>
                     <Stack direction="row" alignItems="center" spacing={1} mb={1}>
                       <PersonIcon color="action" fontSize="small" />
@@ -159,20 +151,20 @@ const OwnerOrders = () => {
                       <ReceiptLongIcon color="action" fontSize="small" />
                       <Typography variant="body2" fontWeight={500}>Total: Rs.{order.total}</Typography>
                     </Stack>
-                    <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                       <LocationOnIcon fontSize="small" sx={{ mr: 0.5 }} />
                       Location: {order.location}
                     </Typography>
-
+                    <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <AccessTimeIcon fontSize="small" sx={{ mr: 0.5 }} />
+                      {order.timeSlot || 'Not Specified'}
+                    </Typography>
                     <Typography variant="subtitle2" fontWeight={600} mb={1}>Items:</Typography>
-                    <List dense disablePadding>
+                    <Stack spacing={0.5}>
                       {order.items.map((item, idx) => (
-                        <ListItem key={idx} disablePadding>
-                          <ListItemIcon sx={{ minWidth: 32 }}><ShoppingCartIcon fontSize="small" /></ListItemIcon>
-                          <ListItemText primary={`${item.name} x${item.qty}`} />
-                        </ListItem>
+                        <Typography key={idx} variant="body2">{`${item.name} x${item.qty}`}</Typography>
                       ))}
-                    </List>
+                    </Stack>
                   </CardContent>
                   <CardActions sx={{ p: 2, bgcolor: theme.palette.background.default }}>
                     {order.status === 'pending' && (
@@ -194,10 +186,7 @@ const OwnerOrders = () => {
           )}
         </Grid>
       </Container>
-
-      <Snackbar open={snackbar.open} autoHideDuration={6000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+      <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={() => setSnackbar({ ...snackbar, open: false })} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
         <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: '100%' }}>
           {snackbar.message}
         </Alert>

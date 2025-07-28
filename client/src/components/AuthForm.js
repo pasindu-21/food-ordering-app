@@ -2,10 +2,13 @@
 
 import React, { useState } from 'react';
 import axios from 'axios';
-import { FaUser, FaEnvelope, FaLock, FaStore } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaLock, FaStore, FaGoogle, FaFacebook } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Alert, Divider } from '@mui/material';
+import {
+  Alert, Typography, Link, Box, Paper, Stack, TextField, Button,
+  InputAdornment, FormControl, InputLabel, Select, MenuItem, ToggleButtonGroup, ToggleButton, Divider
+} from '@mui/material';
 
 const AuthForm = () => {
   const navigate = useNavigate();
@@ -26,10 +29,27 @@ const AuthForm = () => {
     setError('');
   };
 
+  const handleAuthModeChange = (event, newMode) => {
+    if (newMode !== null) {
+      setIsRegister(newMode);
+      setError('');
+    }
+  };
+
+  const isStrongPassword = (password) => {
+    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return strongPasswordRegex.test(password);
+  };
+
   const handleSubmit = async e => {
     e.preventDefault();
     const url = isRegister ? '/api/auth/register' : '/api/auth/login';
     const payload = isRegister ? form : { email: form.email, password: form.password };
+
+    if (isRegister && !isStrongPassword(form.password)) {
+      setError('Password must be at least 8 characters long, with uppercase, lowercase, number, and special character.');
+      return;
+    }
 
     try {
       const res = await axios.post(`http://localhost:5000${url}`, payload);
@@ -42,15 +62,9 @@ const AuthForm = () => {
         sessionStorage.setItem('token', res.data.token);
 
         const userRole = res.data.user.role;
-
-        // <<<<---- මෙන්න FIX එක: Role එක අනුව redirect කරනවා ---->>>>
-        if (userRole === 'admin') {
-          navigate('/admin-dashboard'); // Admin නම්, dashboard එකට යනවා
-        } else if (userRole === 'owner') {
-          navigate('/owner-home'); // Owner නම්, owner home එකට යනවා
-        } else {
-          navigate('/user-home'); // User නම්, user home එකට යනවා
-        }
+        if (userRole === 'admin') navigate('/admin-dashboard');
+        else if (userRole === 'owner') navigate('/owner-home');
+        else navigate('/user-home');
       }
     } catch (err) {
       setError(err.response?.data?.msg || 'An error occurred.');
@@ -59,66 +73,137 @@ const AuthForm = () => {
     }
   };
 
+  // FIXED: Redirect to backend OAuth endpoints
+  const handleGoogleLogin = () => {
+    window.location.href = 'http://localhost:5000/api/auth/google';
+  };
+
+  const handleFacebookLogin = () => {
+    window.location.href = 'http://localhost:5000/api/auth/facebook';
+  };
+
   return (
-    <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
+    <Box sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: '100vh',
+      bgcolor: 'background.default',
+      position: 'relative',
+      p: 2,
+    }}>
       <motion.div
-        className="card shadow-lg p-4"
-        style={{ width: '100%', maxWidth: '400px' }}
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="text-center mb-4">
-          <h4>{isRegister ? 'Create Account' : 'Welcome Back'}</h4>
-          {loginMsg && <Alert severity="warning" className="mt-2 py-2">{loginMsg}</Alert>}
-          {error && <Alert severity="error" className="mt-2 py-2">{error}</Alert>}
-        </div>
+        <Paper elevation={6} sx={{ p: 4, width: '100%', maxWidth: '420px', borderRadius: 3 }}>
+          <Stack spacing={3} component="form" onSubmit={handleSubmit}>
+            <Typography variant="h4" component="h1" fontWeight="bold" textAlign="center">
+              {isRegister ? 'Create Account' : 'Welcome Back'}
+            </Typography>
 
-        <div className="d-flex justify-content-center mb-3">
-          <div className="btn-group w-100">
-            <button type="button" className={`btn ${isRegister ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => { setIsRegister(true); setError(''); }}>Register</button>
-            <button type="button" className={`btn ${!isRegister ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => { setIsRegister(false); setError(''); }}>Login</button>
-          </div>
-        </div>
+            {loginMsg && <Alert severity="warning">{loginMsg}</Alert>}
+            {error && <Alert severity="error">{error}</Alert>}
 
-        <form onSubmit={handleSubmit}>
-          {isRegister && (
-            <>
-              <div className="mb-3">
-                <label htmlFor="name" className="form-label"><FaUser className="me-2" /> Name</label>
-                <input id="name" name="name" className="form-control" autoComplete="name" onChange={handleChange} required />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="role" className="form-label"><FaStore className="me-2" /> Role</label>
-                <select id="role" name="role" className="form-select" onChange={handleChange} value={form.role}>
-                  <option value="user">Normal User</option>
-                  <option value="owner">Shop Owner</option>
-                  {/* Register form එකේ Admin role එක පෙන්නන්නේ නැහැ. ඒක security measure එකක්. */}
-                </select>
-              </div>
-            </>
-          )}
-          <div className="mb-3">
-            <label htmlFor="email" className="form-label"><FaEnvelope className="me-2" /> Email</label>
-            <input id="email" type="email" name="email" className="form-control" autoComplete="email" onChange={handleChange} required />
-          </div>
-          <div className="mb-4">
-            <label htmlFor="password" className="form-label"><FaLock className="me-2" /> Password</label>
-            <input id="password" type="password" name="password" className="form-control" autoComplete={isRegister ? 'new-password' : 'current-password'} onChange={handleChange} required />
-          </div>
-          <button type="submit" className="btn btn-success w-100">
-            {isRegister ? 'Register' : 'Login'}
-          </button>
-        </form>
+            <ToggleButtonGroup
+              value={isRegister}
+              exclusive
+              onChange={handleAuthModeChange}
+              fullWidth
+            >
+              <ToggleButton value={true}>Register</ToggleButton>
+              <ToggleButton value={false}>Login</ToggleButton>
+            </ToggleButtonGroup>
 
-        <Divider sx={{ my: 2 }}>OR</Divider>
+            {isRegister && (
+              <>
+                <TextField
+                  name="name"
+                  label="Name"
+                  onChange={handleChange}
+                  required
+                  InputProps={{
+                    startAdornment: <InputAdornment position="start"><FaUser /></InputAdornment>,
+                  }}
+                />
+                <FormControl fullWidth>
+                  <InputLabel id="role-label">Role</InputLabel>
+                  <Select
+                    labelId="role-label"
+                    name="role"
+                    value={form.role}
+                    label="Role"
+                    onChange={handleChange}
+                    startAdornment={<InputAdornment position="start"><FaStore /></InputAdornment>}
+                  >
+                    <MenuItem value="user">Normal User</MenuItem>
+                    <MenuItem value="owner">Shop Owner</MenuItem>
+                  </Select>
+                </FormControl>
+              </>
+            )}
 
-        <button className="btn btn-outline-secondary w-100" onClick={() => navigate('/shops')}>
-          Browse Shops as a Guest
-        </button>
+            <TextField
+              name="email"
+              type="email"
+              label="Email"
+              onChange={handleChange}
+              required
+              InputProps={{
+                startAdornment: <InputAdornment position="start"><FaEnvelope /></InputAdornment>,
+              }}
+            />
+            <TextField
+              name="password"
+              type="password"
+              label="Password"
+              onChange={handleChange}
+              required
+              InputProps={{
+                startAdornment: <InputAdornment position="start"><FaLock /></InputAdornment>,
+              }}
+            />
 
+            <Button type="submit" variant="contained" size="large" fullWidth>
+              {isRegister ? 'Register' : 'Login'}
+            </Button>
+
+            <Typography variant="body2" sx={{ textAlign: 'center', pt: 1 }}>
+              <Link
+                component="button"
+                type="button"
+                onClick={() => navigate('/shops')}
+                sx={{ color: 'text.secondary', textDecoration: 'underline' }}
+              >
+                or browse as a guest
+              </Link>
+            </Typography>
+
+            <Divider>or continue with</Divider>
+            <Stack direction="row" spacing={2}>
+              <Button
+                variant="outlined"
+                fullWidth
+                startIcon={<FaGoogle />}
+                onClick={handleGoogleLogin}
+              >
+                Google
+              </Button>
+              <Button
+                variant="outlined"
+                fullWidth
+                startIcon={<FaFacebook />}
+                onClick={handleFacebookLogin}
+              >
+                Facebook
+              </Button>
+            </Stack>
+          </Stack>
+        </Paper>
       </motion.div>
-    </div>
+    </Box>
   );
 };
 

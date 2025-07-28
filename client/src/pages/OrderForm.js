@@ -1,27 +1,17 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import {
-  Box,
-  Typography,
-  Button,
-  TextField,
-  MenuItem,
-  Select,
-  InputLabel,
-  FormControl,
-  Grid,
-  Paper,
-  List,
-  ListItem,
-  ListItemText,
-  IconButton
+  Box, Typography, Button, TextField, MenuItem, Select, InputLabel, FormControl, Grid,
+  Paper, List, ListItem, ListItemText, IconButton
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 const LOCATIONS = ['A', 'B', 'C', 'D'];
+const TIME_SLOTS = ['Breakfast', 'Lunch', 'Dinner']; // Time slots
 
 const OrderForm = ({ shop, onOrderPlaced }) => {
   const [location, setLocation] = useState('A');
+  const [timeSlot, setTimeSlot] = useState(''); // New time slot state
   const [selectedItem, setSelectedItem] = useState('');
   const [qty, setQty] = useState(1);
   const [orderItems, setOrderItems] = useState([]);
@@ -32,7 +22,6 @@ const OrderForm = ({ shop, onOrderPlaced }) => {
     if (!selectedItem || qty <= 0) return;
     const itemObj = shop.menuItems.find(i => i.name === selectedItem);
     if (!itemObj) return;
-    // Prevent duplicate items (optional)
     if (orderItems.some(i => i.name === selectedItem)) return;
     setOrderItems([...orderItems, { name: itemObj.name, price: itemObj.price, qty }]);
     setSelectedItem('');
@@ -46,8 +35,8 @@ const OrderForm = ({ shop, onOrderPlaced }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (orderItems.length === 0) {
-      alert('Please add at least one item.');
+    if (orderItems.length === 0 || !timeSlot) { // Time slot required
+      alert('Please add at least one item and select a time slot.');
       return;
     }
     setLoading(true);
@@ -56,7 +45,8 @@ const OrderForm = ({ shop, onOrderPlaced }) => {
       await axios.post('http://localhost:5000/api/orders', {
         shopId: shop._id,
         items: orderItems,
-        location
+        location,
+        timeSlot // Send time slot to backend
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -65,6 +55,7 @@ const OrderForm = ({ shop, onOrderPlaced }) => {
       setOrderItems([]);
       setSelectedItem('');
       setQty(1);
+      setTimeSlot(''); // Reset time slot
     } catch (err) {
       alert('Order failed');
     } finally {
@@ -91,6 +82,23 @@ const OrderForm = ({ shop, onOrderPlaced }) => {
               >
                 {LOCATIONS.map(loc => (
                   <MenuItem key={loc} value={loc}>{loc}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} sm={4} md={3}>
+            <FormControl sx={{ minWidth: 140 }} size="small" fullWidth>
+              <InputLabel id="time-slot-label">Time Slot</InputLabel>
+              <Select
+                labelId="time-slot-label"
+                id="time-slot-select"
+                value={timeSlot}
+                label="Time Slot"
+                onChange={e => setTimeSlot(e.target.value)}
+                required // Required field
+              >
+                {TIME_SLOTS.map(slot => (
+                  <MenuItem key={slot} value={slot}>{slot}</MenuItem>
                 ))}
               </Select>
             </FormControl>

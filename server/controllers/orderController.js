@@ -6,9 +6,9 @@ exports.createOrder = async (req, res) => {
   try {
     if (req.user.role !== 'user') return res.status(403).json({ msg: 'Only users can place orders.' });
 
-    const { shopId, items, location } = req.body;
-    if (!shopId || !items || !Array.isArray(items) || items.length === 0 || !location) {
-      return res.status(400).json({ msg: 'Invalid order data.' });
+    const { shopId, items, location, timeSlot } = req.body; // New timeSlot
+    if (!shopId || !items || !Array.isArray(items) || items.length === 0 || !location || !timeSlot) {
+      return res.status(400).json({ msg: 'Invalid order data. Time slot is required.' });
     }
 
     const shop = await Shop.findById(shopId);
@@ -23,6 +23,7 @@ exports.createOrder = async (req, res) => {
       items: itemsWithStatus,
       total,
       location,
+      timeSlot, // Save time slot
       owner: shop.owner
     });
 

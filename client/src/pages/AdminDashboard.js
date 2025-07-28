@@ -4,7 +4,7 @@ import {
   Container, Grid, Paper, Typography, Box, CircularProgress, Alert,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   IconButton, Tooltip, Dialog, DialogActions, DialogContent,
-  DialogTitle, Button, TextField, Select, MenuItem, InputLabel, FormControl, Chip
+  DialogTitle, Button, TextField, Select, MenuItem, InputLabel, FormControl, Chip, Stack // FIXED: Added Stack
 } from '@mui/material';
 import { PieChart, Pie, Legend, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from 'recharts';
 import PeopleIcon from '@mui/icons-material/People';
@@ -13,9 +13,9 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import DeleteIcon from '@mui/icons-material/Delete';
 import BlockIcon from '@mui/icons-material/Block';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import EditIcon from '@mui/icons-material/Edit'; // Added for edit button
 
 import { useTheme } from '@mui/material/styles';
-
 
 // Reusable Components
 const StatCard = ({ title, value, icon, color }) => {
@@ -34,7 +34,6 @@ const StatCard = ({ title, value, icon, color }) => {
     </Paper>
   );
 };
-
 
 const CustomTooltip = ({ active, payload }) => {
   const theme = useTheme();
@@ -60,7 +59,6 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
-
 const RoleChip = ({ role }) => {
   let color = 'default';
   if (role === 'admin') color = 'primary';
@@ -68,12 +66,10 @@ const RoleChip = ({ role }) => {
   return <Chip label={role.charAt(0).toUpperCase() + role.slice(1)} color={color} size="small" />;
 };
 
-
 const AdminDashboard = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   
-
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -81,6 +77,7 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [deleteUser, setDeleteUser] = useState(null);
+  const [editUser, setEditUser] = useState(null); // NEW: State for editing user
   const adminName = JSON.parse(sessionStorage.getItem('user'))?.name || 'Admin';
 
   const fetchData = async () => {
@@ -131,6 +128,22 @@ const AdminDashboard = () => {
 
   const handleOpenDelete = (user) => setDeleteUser(user);
   const handleCloseDelete = () => setDeleteUser(null);
+
+  // NEW: Edit User Functions
+  const handleOpenEdit = (user) => setEditUser(user);
+  const handleCloseEdit = () => setEditUser(null);
+
+  const handleSaveEdit = async () => {
+    if (!editUser) return;
+    const token = sessionStorage.getItem('token');
+    try {
+      await axios.put(`http://localhost:5000/api/admin/users/${editUser._id}`, editUser, { headers: { Authorization: `Bearer ${token}` } });
+      fetchData();
+      handleCloseEdit();
+    } catch (err) {
+      alert(err.response?.data?.msg || 'Failed to update user.');
+    }
+  };
 
   const filteredUsers = useMemo(() => {
     return users.filter(user => {
@@ -197,8 +210,8 @@ const AdminDashboard = () => {
             <Paper elevation={isDark ? 2 : 3}
               sx={{ 
                 width: '100%', 
-                p: 10, 
-                borderRadius: 10, 
+                p: { xs: 2, md: 4 }, 
+                borderRadius: 4, 
                 minHeight: 300, 
                 height: '100%', 
                 display: 'flex', 
@@ -258,6 +271,12 @@ const AdminDashboard = () => {
                               {user.isSuspended ? <CheckCircleIcon color="success" /> : <BlockIcon color="warning" />}
                             </IconButton>
                           </Tooltip>
+                          {/* NEW: Edit Button Added Here */}
+                          <Tooltip title="Edit User">
+                            <IconButton color="primary" onClick={() => handleOpenEdit(user)}>
+                                <EditIcon />
+                            </IconButton>
+                          </Tooltip>
                           <Tooltip title="Delete">
                             <IconButton color="error" onClick={() => handleOpenDelete(user)}><DeleteIcon /></IconButton>
                           </Tooltip>
@@ -273,10 +292,10 @@ const AdminDashboard = () => {
           <Grid item xs={12} lg={6}>
             <Paper elevation={isDark ? 2 : 3}
               sx={{ 
-                width: '170%', 
-                p: 10, 
-                borderRadius: 3, 
-                minHeight: 200, 
+                width: '190%', 
+                p: { xs: 2, md: 4 }, 
+                borderRadius: 4, 
+                minHeight: 100, 
                 height: '100%', 
                 display: 'flex', 
                 flexDirection: 'column',
@@ -312,6 +331,7 @@ const AdminDashboard = () => {
         </Grid>
       </Container>
 
+      {/* Delete Dialog */}
       <Dialog open={!!deleteUser} onClose={handleCloseDelete} PaperProps={{ sx: { bgcolor: theme.palette.background.paper } }}>
         <DialogTitle>Confirm Deletion</DialogTitle>
         <DialogContent>
@@ -324,6 +344,46 @@ const AdminDashboard = () => {
           <Button onClick={handleDeleteUser} color="error" variant="contained">Delete</Button>
         </DialogActions>
       </Dialog>
+
+      {/* NEW: Edit User Dialog Added Here */}
+      <Dialog open={!!editUser} onClose={handleCloseEdit} PaperProps={{ sx: { bgcolor: theme.palette.background.paper } }}>
+        <DialogTitle>Edit User: {editUser?.name}</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 2, width: '400px' }}>
+            <TextField
+              label="Name"
+              value={editUser?.name || ''}
+              onChange={(e) => setEditUser({ ...editUser, name: e.target.value })}
+              fullWidth
+              required
+            />
+            <TextField
+              label="Email"
+              value={editUser?.email || ''}
+              onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
+              fullWidth
+              required
+            />
+            <FormControl fullWidth>
+              <InputLabel>Role</InputLabel>
+              <Select
+                value={editUser?.role || ''}
+                label="Role"
+                onChange={(e) => setEditUser({ ...editUser, role: e.target.value })}
+              >
+                <MenuItem value="admin">Admin</MenuItem>
+                <MenuItem value="owner">Owner</MenuItem>
+                <MenuItem value="user">User</MenuItem>
+              </Select>
+            </FormControl>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseEdit}>Cancel</Button>
+          <Button onClick={handleSaveEdit} color="primary" variant="contained">Save Changes</Button>
+        </DialogActions>
+      </Dialog>
+
     </Box>
   );
 };
