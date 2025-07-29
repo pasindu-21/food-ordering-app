@@ -10,7 +10,7 @@ const FooterBar = styled(Box)(({ theme }) => ({
   marginTop: theme.spacing(8),
   padding: theme.spacing(3, 2),
   background: theme.palette.mode === 'dark'
-    ? 'linear-gradient(90deg, #181c23 0%, #232632 100%)'
+    ? 'linear-gradient(90deg, #b3b9c5ff 0%, #232632 100%)'
     : 'linear-gradient(90deg, #ecf0f3 0%, #fafafa 100%)',
   textAlign: 'center',
   borderTop: `1.5px solid ${theme.palette.divider}`,
