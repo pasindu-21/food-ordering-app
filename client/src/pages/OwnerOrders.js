@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
   Box, Container, Grid, Card, CardContent, CardActions, Typography, Button, Chip,
-  Stack, CircularProgress, Snackbar, Alert, Accordion, AccordionSummary, AccordionDetails, List, ListItem, ListItemText
+  Stack, CircularProgress, Snackbar, Alert, Accordion, AccordionSummary, AccordionDetails,
+  List, ListItem, ListItemText, TextField, InputAdornment
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
@@ -12,6 +13,7 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import PersonIcon from '@mui/icons-material/Person';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import SearchIcon from '@mui/icons-material/Search';
 import { useTheme } from '@mui/material/styles';
 
 const timeSlots = ['Breakfast', 'Lunch', 'Dinner'];
@@ -21,6 +23,7 @@ const OwnerOrders = () => {
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [search, setSearch] = useState("");
   const theme = useTheme();
 
   useEffect(() => { fetchOrders(); }, []);
@@ -47,7 +50,7 @@ const OwnerOrders = () => {
       .catch(() => setSnackbar({ open: true, message: 'Failed to update status', severity: 'error' }));
   };
 
-  const getStatusChipColor = (status) => {
+  const getStatusChipColor = status => {
     switch (status) {
       case 'pending': return 'warning';
       case 'accepted': return 'info';
@@ -58,7 +61,15 @@ const OwnerOrders = () => {
     }
   };
 
-  // Aggregation: timeSlot -> location -> { item: qty }
+  // --- Filter orders for full orders list by name/email ---
+  const filteredOrders = orders.filter(order => {
+    if (!search) return true;
+    const name = order.user?.name?.toLowerCase() || "";
+    const email = order.user?.email?.toLowerCase() || "";
+    return name.includes(search.toLowerCase()) || email.includes(search.toLowerCase());
+  });
+
+  // ---------------------- summary preparation -----------------------
   const summary = timeSlots.reduce((acc, slot) => {
     acc[slot] = locations.reduce((locAcc, loc) => {
       locAcc[loc] = {};
@@ -90,11 +101,23 @@ const OwnerOrders = () => {
           Manage Today's Orders
         </Typography>
 
-        {/* Cards for Breakfast/Lunch/Dinner */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
+        {/* ---- CENTERED SUMMARY CARDS ---- */}
+        <Grid
+          container
+          spacing={3}
+          justifyContent="center"
+          alignItems="stretch"
+          sx={{ mb: 4, maxWidth: 1200, mx: 'auto' }}
+        >
           {timeSlots.map(slot => (
-            <Grid item xs={12} md={4} key={slot}>
-              <Card sx={{ borderRadius: 3, boxShadow: theme.shadows[4] }}>
+            <Grid
+              item
+              xs={12}
+              md={4}
+              key={slot}
+              sx={{ display: 'flex', justifyContent: 'center' }}
+            >
+              <Card sx={{ borderRadius: 3, boxShadow: theme.shadows[4], width: '100%', maxWidth: 370 }}>
                 <CardContent>
                   <Typography variant="h6" fontWeight={700} gutterBottom>
                     <AccessTimeIcon sx={{ mr: 1, color: 'primary.main' }} />
@@ -127,17 +150,49 @@ const OwnerOrders = () => {
           ))}
         </Grid>
 
-        {/* Individual Orders List for Today */}
+        {/* ---- SEARCH FILTER for user name/email ---- */}
+        <Box sx={{ maxWidth: 400, mx: 'auto', mb: 4 }}>
+          <TextField
+            placeholder="Search by customer name or email"
+            variant="outlined"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="primary" />
+                </InputAdornment>
+              ),
+            }}
+            fullWidth
+            autoFocus
+            size="medium"
+            sx={{
+              bgcolor: theme.palette.background.paper,
+              borderRadius: 2,
+              boxShadow: theme.shadows[1]
+            }}
+          />
+        </Box>
+
+        {/* ---- ALL ORDERS SECTION ---- */}
         <Typography variant="h5" fontWeight={600} mb={2}>All Today's Orders</Typography>
         <Grid container spacing={3}>
-          {orders.length === 0 ? (
+          {filteredOrders.length === 0 ? (
             <Grid item xs={12}>
-              <Typography color="text.secondary" align="center" sx={{ mt: 4 }}>No orders found for today.</Typography>
+              <Typography color="text.secondary" align="center" sx={{ mt: 4 }}>
+                {search ? `No orders found for "${search}".` : "No orders found for today."}
+              </Typography>
             </Grid>
           ) : (
-            orders.map(order => (
+            filteredOrders.map(order => (
               <Grid item xs={12} md={6} lg={4} key={order._id}>
-                <Card sx={{ borderRadius: 3, boxShadow: theme.shadows[3], backgroundColor: theme.palette.background.paper, height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <Card sx={{
+                  borderRadius: 3,
+                  boxShadow: theme.shadows[3],
+                  backgroundColor: theme.palette.background.paper,
+                  height: '100%', display: 'flex', flexDirection: 'column'
+                }}>
                   <CardContent sx={{ flexGrow: 1 }}>
                     <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
                       <Typography variant="h6" fontWeight={600}>{order.shop?.shopName}</Typography>
