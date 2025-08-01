@@ -7,7 +7,7 @@ import InstagramIcon from '@mui/icons-material/Instagram';
 
 const FooterBar = styled(Box)(({ theme }) => ({
   width: "100%",
-  marginTop: theme.spacing(8),
+  marginTop: theme.spacing(0),
   padding: theme.spacing(3, 2),
   background: theme.palette.mode === 'dark'
     ? 'linear-gradient(90deg, #181c23 0%, #232632 100%)'
