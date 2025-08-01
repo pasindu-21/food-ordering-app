@@ -1,6 +1,4 @@
-//Strong password code
 import React, { useState } from 'react';
-
 import axios from 'axios';
 import {
   Box, Button, TextField, Typography, Paper, Stack, IconButton, InputAdornment, CircularProgress, Link,
@@ -25,8 +23,8 @@ const AuthForm = () => {
     role: 'user',
   });
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false); // New for loading state
-  const [validationErrors, setValidationErrors] = useState({}); // New for validation
+  const [loading, setLoading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
 
   const loginMsg = location.state?.msg;
 
@@ -49,7 +47,9 @@ const AuthForm = () => {
   const validateForm = () => {
     const errors = {};
     if (!form.email.includes('@')) errors.email = 'Invalid email format';
-    if (form.password.length < 6) errors.password = 'Password must be at least 6 characters';
+    // Removed strong password check for now
+    // TODO: Add strong password validation later (e.g., length, uppercase, numbers, etc.)
+    // if (form.password.length < 6) errors.password = 'Password must be at least 6 characters';
     if (!isSignIn && form.name.trim() === '') errors.name = 'Name is required';
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
@@ -60,7 +60,7 @@ const AuthForm = () => {
     if (!validateForm()) return;
 
     setLoading(true);
-    const url = isSignIn ? '/api/auth/login' : '/api/auth/register'; // Adjusted for consistency
+    const url = isSignIn ? '/api/auth/login' : '/api/auth/register';
     const payload = isSignIn ? { email: form.email, password: form.password } : form;
 
     try {
@@ -88,7 +88,7 @@ const AuthForm = () => {
           redirectPath = '/user-home';
         }
 
-        window.location.href = redirectPath; // Hard redirect
+        window.location.href = redirectPath;
       }
     } catch (err) {
       setError(err.response?.data?.msg || 'An error occurred. Please try again.');
@@ -196,7 +196,7 @@ const AuthForm = () => {
             <Typography variant="body2" align="center" sx={{ mt: 1 }}>
               Don't have an account?{' '}
               <Button onClick={toggleView} color="primary" sx={{ p: 0 }}>
-                Create Account
+                Sign up here
               </Button>
             </Typography>
           </form>
@@ -220,13 +220,13 @@ const AuthForm = () => {
           '&:hover': { boxShadow: 6 },
         }}
         role="form"
-        aria-label="Create Account Form"
+        aria-label="Sign Up Form"
       >
         {/* Sign Up Form */}
         {!isSignIn && (
           <form onSubmit={handleSubmit}>
             <Typography variant="h5" align="center" gutterBottom sx={{ fontWeight: 'bold' }}>
-              Create Account
+              Sign Up
             </Typography>
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
             <Stack spacing={2}>
@@ -269,8 +269,8 @@ const AuthForm = () => {
                 }}
                 required
               >
-                <option value="user">Normal User</option>
-                <option value="owner">Shop Owner</option>
+                <option value="user">Student</option>
+                <option value="owner">Vendor</option>
               </TextField>
               <TextField
                 label="Email"
@@ -318,7 +318,7 @@ const AuthForm = () => {
                 required
               />
               <Button variant="contained" color="primary" fullWidth type="submit" disabled={loading}>
-                {loading ? <CircularProgress size={24} color="inherit" /> : 'Create Account'}
+                {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign Up'}
               </Button>
             </Stack>
             <Typography variant="body2" align="center" sx={{ mt: 2 }}>
@@ -354,3 +354,4 @@ const AuthForm = () => {
 };
 
 export default AuthForm;
+

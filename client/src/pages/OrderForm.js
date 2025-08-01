@@ -7,7 +7,11 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 
 const LOCATIONS = ['A', 'B', 'C', 'D'];
-const TIME_SLOTS = ['Breakfast', 'Lunch', 'Dinner']; // Time slots
+const TIME_SLOTS = [
+  { value: 'breakfast', label: 'Breakfast - 8.00 A.M' },
+  { value: 'lunch', label: 'Lunch - 12.00 P.M' },
+  { value: 'dinner', label: 'Dinner - 8.00 P.M' }
+]; // Updated with labels including times
 
 const OrderForm = ({ shop, onOrderPlaced }) => {
   const [location, setLocation] = useState('A');
@@ -98,7 +102,7 @@ const OrderForm = ({ shop, onOrderPlaced }) => {
                 required // Required field
               >
                 {TIME_SLOTS.map(slot => (
-                  <MenuItem key={slot} value={slot}>{slot}</MenuItem>
+                  <MenuItem key={slot.value} value={slot.value}>{slot.label}</MenuItem>
                 ))}
               </Select>
             </FormControl>

@@ -9,9 +9,6 @@ import {
   Tabs, Tab, Skeleton, Fade, Stepper, Step, StepLabel, Stack
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import PendingIcon from '@mui/icons-material/HourglassEmpty';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import InfoIcon from '@mui/icons-material/Info';
@@ -20,34 +17,44 @@ import InputBase from '@mui/material/InputBase';
 import Collapse from '@mui/material/Collapse';
 import { useTheme } from '@mui/material/styles';
 
+// ICONS - Match preview image colors/meaning
+import PendingIcon from '@mui/icons-material/HourglassEmpty';          // Pending ⏳ (orange)
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'; // Accepted ✅ (blue)
+import TaskAltIcon from '@mui/icons-material/TaskAlt';                // Completed ✔️ (green)
+import CancelIcon from '@mui/icons-material/Cancel';                  // Rejected/Cancelled ❌ (red/grey)
+
 const STATUS_STEPS = [
-  { key: 'pending', label: 'Pending', icon: <PendingIcon /> },
-  { key: 'accepted', label: 'Accepted', icon: <CheckCircleOutlineIcon /> },
-  { key: 'completed', label: 'Completed', icon: <CheckCircleOutlineIcon /> },
-  { key: 'rejected', label: 'Rejected', icon: <ErrorOutlineIcon /> },
-  { key: 'cancelled', label: 'Cancelled', icon: <ErrorOutlineIcon /> },
-  { key: 'expired', label: 'Expired', icon: <ErrorOutlineIcon /> }
+  { key: 'pending', label: 'Pending', icon: <PendingIcon sx={{ color: '#fb8c00' }} /> },
+  { key: 'accepted', label: 'Accepted', icon: <CheckCircleOutlineIcon sx={{ color: '#2979ff' }} /> },
+  { key: 'completed', label: 'Completed', icon: <TaskAltIcon sx={{ color: '#43a047' }} /> },
+  { key: 'rejected', label: 'Rejected', icon: <CancelIcon sx={{ color: '#e53935' }} /> },
+  { key: 'cancelled', label: 'Cancelled', icon: <CancelIcon sx={{ color: '#e53935' }} /> },
+  { key: 'expired', label: 'Expired', icon: <CancelIcon sx={{ color: '#bdbdbd' }} /> }
 ];
 
-const getStepperStep = (status) => {
-  return {
-    'pending': 0,
-    'accepted': 1,
-    'completed': 2,
-    'rejected': 3,
-    'cancelled': 4,
-    'expired': 5
-  }[status] || 0;
-};
+const getStepperStep = (status) => ({
+  'pending': 0,
+  'accepted': 1,
+  'completed': 2,
+  'rejected': 3,
+  'cancelled': 4,
+  'expired': 5
+}[status] || 0);
 
 const getStatusProps = (status) => {
   switch (status) {
-    case 'completed': return { label: 'Completed', color: 'success', icon: <CheckCircleOutlineIcon fontSize="inherit" /> };
-    case 'accepted': return { label: 'Accepted', color: 'warning', icon: <CheckCircleOutlineIcon fontSize="inherit" /> };
-    case 'rejected': return { label: 'Rejected', color: 'error', icon: <ErrorOutlineIcon fontSize="inherit" /> };
-    case 'cancelled': return { label: 'Cancelled', color: 'error', icon: <ErrorOutlineIcon fontSize="inherit" /> };
-    case 'expired': return { label: 'Expired', color: 'default', icon: <ErrorOutlineIcon fontSize="inherit" /> };
-    default: return { label: 'Pending', color: 'warning', icon: <PendingIcon fontSize="inherit" /> };
+    case 'completed':
+      return { label: 'Completed', color: 'success', icon: <TaskAltIcon fontSize="inherit" sx={{ color: '#43a047' }} /> };
+    case 'accepted':
+      return { label: 'Accepted', color: 'info', icon: <CheckCircleOutlineIcon fontSize="inherit" sx={{ color: '#2979ff' }} /> };
+    case 'rejected':
+      return { label: 'Rejected', color: 'error', icon: <CancelIcon fontSize="inherit" sx={{ color: '#e53935' }} /> };
+    case 'cancelled':
+      return { label: 'Cancelled', color: 'error', icon: <CancelIcon fontSize="inherit" sx={{ color: '#e53935' }} /> };
+    case 'expired':
+      return { label: 'Expired', color: 'default', icon: <CancelIcon fontSize="inherit" sx={{ color: '#bdbdbd' }} /> };
+    default:
+      return { label: 'Pending', color: 'warning', icon: <PendingIcon fontSize="inherit" sx={{ color: '#fb8c00' }} /> };
   }
 };
 
@@ -76,7 +83,7 @@ const MemoizedOrderCard = memo(({ order, onDeleteClick, onCancelClick, canDelete
   const { label, color, icon } = getStatusProps(order.status);
   const stepIndex = getStepperStep(order.status);
 
-  // Highlight for rejected/cancelled
+  // Highlight for rejected/cancelled/expired
   const isBad = ['rejected', 'cancelled', 'expired'].includes(order.status);
 
   return (
@@ -323,9 +330,9 @@ const UserOrders = () => {
         </Typography>
         {/* Order Stats Row */}
         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
-          <Chip icon={<CheckCircleOutlineIcon />} color="success" label={`Completed: ${countByStatus('completed')}`} sx={{ fontWeight:700 }}/>
-          <Chip icon={<PendingIcon />} color="warning" label={`Pending: ${countByStatus('pending')}`} sx={{ fontWeight:700 }}/>
-          <Chip icon={<ErrorOutlineIcon />} color="error" label={`Rejected/Cancelled: ${countByStatus('rejected')+countByStatus('cancelled')+countByStatus('expired')}`} sx={{ fontWeight:700 }}/>
+          <Chip icon={<TaskAltIcon sx={{ color: '#43a047' }} />} color="success" label={`Completed: ${countByStatus('completed')}`} sx={{ fontWeight:700 }}/>
+          <Chip icon={<PendingIcon sx={{ color: '#fb8c00' }} />} color="warning" label={`Pending: ${countByStatus('pending')}`} sx={{ fontWeight:700 }}/>
+          <Chip icon={<CancelIcon sx={{ color: '#e53935' }} />} color="error" label={`Rejected/Cancelled: ${countByStatus('rejected')+countByStatus('cancelled')+countByStatus('expired')}`} sx={{ fontWeight:700 }}/>
           <Chip label={`Total: ${total}`} sx={{ fontWeight:700 }}/>
         </Box>
         {/* Search Orders */}
