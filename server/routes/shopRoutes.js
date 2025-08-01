@@ -1,11 +1,12 @@
-// server/routes/shopRoutes.js
-
 const express = require('express');
 const router = express.Router();
 const shopController = require('../controllers/shopController');
 const auth = require('../middleware/auth');
 
-router.get('/public', shopController.getAllShops);
+// Public route to get all shops - auth ඕනෙ නැහැ, visitors ට බලන්න පුලුවන්
+router.get('/', shopController.getAllShops);
+
+// Protected routes
 router.post('/', auth, shopController.addShop);
 router.get('/my', auth, shopController.getMyShops);
 router.put('/:id', auth, shopController.updateShop);

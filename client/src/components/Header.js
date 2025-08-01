@@ -17,9 +17,13 @@ const Header = () => {
   } catch {
     role = null;
   }
-  if (location.pathname === '/') return null;
+
+  // Auth page එකේ nav buttons hide කරන්න, ඒත් logo සහ dark mode keep කරන්න
+  const isAuthPage = location.pathname === '/auth';
 
   const renderNavButtons = () => {
+    if (isAuthPage) return null; // Auth page එකේ nav buttons hide කරන්න
+
     if (role === 'admin') {
       return (
         <>
@@ -47,8 +51,12 @@ const Header = () => {
         </>
       );
     } else {
+      // Non-logged-in: Separate Login සහ Register buttons, "/auth" එකට link
       return (
-        <Button component={Link} to="/" color="inherit">Login / Register</Button>
+        <>
+          <Button component={Link} to="/auth" color="inherit">Login</Button>
+          <Button component={Link} to="/auth" color="inherit">Register</Button>
+        </>
       );
     }
   };
@@ -57,7 +65,7 @@ const Header = () => {
     if (role === 'admin') navigate('/admin-dashboard');
     else if (role === 'owner') navigate('/owner-home');
     else if (role === 'user') navigate('/user-home');
-    else navigate('/shops');
+    else navigate('/'); // Non-logged-in ට shops page එකට (default "/")
   };
 
   return (
@@ -72,6 +80,7 @@ const Header = () => {
         </Typography>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           {renderNavButtons()}
+          {/* Dark mode button එක always visible, හැම page එකකම තියෙන්න */}
           <Tooltip title={mode === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}>
             <IconButton color="inherit" onClick={toggleColorMode}>
               {mode === "dark" ? <Brightness7Icon /> : <Brightness4Icon />}

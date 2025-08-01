@@ -1,6 +1,5 @@
-// src/App.js
-
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 
 // Component & Page Imports
 import AuthForm from './components/AuthForm';
@@ -16,33 +15,71 @@ import UserOrders from './pages/UserOrders';
 import OwnerOrders from './pages/OwnerOrders';
 import DailyReports from './pages/DailyReports';
 import AdminDashboard from './pages/AdminDashboard';
-import ColorModeProvider from "./context/ColorModeContext"; // නිවැරදි path එක
+import ColorModeProvider from "./context/ColorModeContext";
 import About from './pages/About';
 import Contact from './pages/Contact';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 
+// New Root component for auth check inside Router
+function Root() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = sessionStorage.getItem('token');
+    const user = JSON.parse(sessionStorage.getItem('user'));
+    // Only redirect if on /auth and token exists - මේකෙන් infinite loop prevent වෙයි
+    if (token && user && window.location.pathname === '/auth') {
+      const userRole = user.role;
+      let redirectPath = '';
+      if (userRole === 'admin') {
+        redirectPath = '/admin-dashboard';
+      } else if (userRole === 'owner') {
+        redirectPath = '/owner-home';
+      } else {
+        redirectPath = '/user-home';
+      }
+      navigate(redirectPath, { replace: true });
+    }
+  }, [navigate]); // Dependency stable, no loop
+
+  return (
+    <>
+      <Header />
+      <Routes>
+        {/* Default route එක shops list එකට */}
+        <Route path="/" element={<UserShopList />} />
+        
+        {/* Auth form එක */}
+        <Route path="/auth" element={<AuthForm />} />
+        
+        {/* Protected routes */}
+        <Route path="/user-home" element={<PrivateRoute><UserHome /></PrivateRoute>} />
+        <Route path="/my-orders" element={<PrivateRoute><UserOrders /></PrivateRoute>} />
+        <Route path="/owner-home" element={<PrivateRoute><OwnerHome /></PrivateRoute>} />
+        <Route path="/my-shops" element={<PrivateRoute><OwnerShopList /></PrivateRoute>} />
+        <Route path="/add-shop" element={<PrivateRoute><AddShop /></PrivateRoute>} />
+        <Route path="/owner-orders" element={<PrivateRoute><OwnerOrders /></PrivateRoute>} />
+        <Route path="/daily-reports" element={<PrivateRoute><DailyReports /></PrivateRoute>} />
+        <Route path="/admin-dashboard" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
+        
+        {/* Public pages */}
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        
+        {/* Add /shops route to match links (e.g., from Header) - මේකෙන් "no match" error solve වෙයි */}
+        <Route path="/shops" element={<UserShopList />} />
+      </Routes>
+      <Footer />
+    </>
+  );
+}
 
 function App() {
   return (
     <ColorModeProvider>
       <Router>
-        <Header />
-        <Routes>
-          <Route path="/" element={<AuthForm />} />
-          <Route path="/shops" element={<UserShopList />} />
-          <Route path="/user-home" element={<PrivateRoute><UserHome /></PrivateRoute>} />
-          <Route path="/my-orders" element={<PrivateRoute><UserOrders /></PrivateRoute>} />
-          <Route path="/owner-home" element={<PrivateRoute><OwnerHome /></PrivateRoute>} />
-          <Route path="/my-shops" element={<PrivateRoute><OwnerShopList /></PrivateRoute>} />
-          <Route path="/add-shop" element={<PrivateRoute><AddShop /></PrivateRoute>} />
-          <Route path="/owner-orders" element={<PrivateRoute><OwnerOrders /></PrivateRoute>} />
-          <Route path="/daily-reports" element={<PrivateRoute><DailyReports /></PrivateRoute>} />
-          <Route path="/admin-dashboard" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/privacy" element={<PrivacyPolicy />} />
-        </Routes>
-        <Footer />
+        <Root /> {/* All routing and auth check inside Root */}
       </Router>
     </ColorModeProvider>
   );

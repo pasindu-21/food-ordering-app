@@ -5,7 +5,7 @@ import OrderForm from './OrderForm';
 import {
   Container, Grid, Card, CardMedia, CardContent, CardActions, Typography,
   Button, Box, List, ListItem, ListItemText, Dialog, DialogTitle,
-  DialogContent, IconButton, DialogActions, Paper, Skeleton,  InputBase
+  DialogContent, IconButton, DialogActions, Paper, Skeleton, InputBase
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
@@ -31,14 +31,16 @@ const UserShopList = () => {
 
   useEffect(() => {
     setLoading(true);
-    axios.get("http://localhost:5000/api/shops/public")
+    axios.get("http://localhost:5000/api/shops/") // Updated endpoint - /public remove කළා
       .then(res => {
         setShops(res.data);
         setLoading(false);
+        console.log('Shops loaded successfully:', res.data); // Debug log add කළා
       })
       .catch(err => {
         setShops([]);
         setLoading(false);
+        console.error('Error fetching shops:', err); // Improved error handling
       });
   }, []);
 
@@ -234,7 +236,7 @@ const UserShopList = () => {
           <Button onClick={handleCloseLoginModal}>Cancel</Button>
           <Button
             variant="contained"
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/auth')} // Updated to /auth - login page එකට direct යයි
             sx={{ fontWeight: 700, borderRadius: 99 }}
           >
             Login / Register

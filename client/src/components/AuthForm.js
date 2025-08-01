@@ -1,15 +1,14 @@
-// src/components/AuthForm.js
-
 import React, { useState } from 'react';
 import axios from 'axios';
 import { FaUser, FaEnvelope, FaLock, FaStore } from 'react-icons/fa';
 import { motion } from 'framer-motion';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Alert, Divider } from '@mui/material';
+import { useLocation } from 'react-router-dom';
+import { Alert } from '@mui/material';
+import { useColorMode } from '../context/ColorModeContext';
 
 const AuthForm = () => {
-  const navigate = useNavigate();
   const location = useLocation();
+  const { mode } = useColorMode();
   const [isRegister, setIsRegister] = useState(true);
   const [form, setForm] = useState({
     name: '',
@@ -33,36 +32,44 @@ const AuthForm = () => {
 
     try {
       const res = await axios.post(`http://localhost:5000${url}`, payload);
+      console.log('API Response:', res.data); // Debug log
 
       if (isRegister) {
         alert('Registered successfully! Please log in.');
         setIsRegister(false);
+        setForm({ ...form, name: '', password: '' });
       } else {
         sessionStorage.setItem('user', JSON.stringify(res.data.user));
         sessionStorage.setItem('token', res.data.token);
+        console.log('Token Saved:', sessionStorage.getItem('token')); // Debug log
 
         const userRole = res.data.user.role;
+        console.log('Redirecting to role:', userRole); // Debug log
 
-        // <<<<---- මෙන්න FIX එක: Role එක අනුව redirect කරනවා ---->>>>
+        let redirectPath = '';
         if (userRole === 'admin') {
-          navigate('/admin-dashboard'); // Admin නම්, dashboard එකට යනවා
+          redirectPath = '/admin-dashboard';
         } else if (userRole === 'owner') {
-          navigate('/owner-home'); // Owner නම්, owner home එකට යනවා
+          redirectPath = '/owner-home';
         } else {
-          navigate('/user-home'); // User නම්, user home එකට යනවා
+          redirectPath = '/user-home';
         }
+
+        // Immediate hard redirect - මේකෙන් issue solve වෙයි
+        window.location.href = redirectPath;
       }
     } catch (err) {
-      setError(err.response?.data?.msg || 'An error occurred.');
+      setError(err.response?.data?.msg || 'An error occurred. Please try again.');
       sessionStorage.removeItem('user');
       sessionStorage.removeItem('token');
+      console.error('Login Error:', err); // Debug log
     }
   };
 
   return (
-    <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
+    <div className={`d-flex justify-content-center align-items-center vh-100 ${mode === 'dark' ? 'bg-dark' : 'bg-light'}`}>
       <motion.div
-        className="card shadow-lg p-4"
+        className={`card shadow-lg p-4 ${mode === 'dark' ? 'bg-secondary text-light' : 'bg-white text-dark'}`}
         style={{ width: '100%', maxWidth: '400px' }}
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -86,37 +93,29 @@ const AuthForm = () => {
             <>
               <div className="mb-3">
                 <label htmlFor="name" className="form-label"><FaUser className="me-2" /> Name</label>
-                <input id="name" name="name" className="form-control" autoComplete="name" onChange={handleChange} required />
+                <input id="name" name="name" className={`form-control ${mode === 'dark' ? 'bg-dark text-light' : 'bg-light text-dark'}`} autoComplete="name" onChange={handleChange} required />
               </div>
               <div className="mb-3">
                 <label htmlFor="role" className="form-label"><FaStore className="me-2" /> Role</label>
-                <select id="role" name="role" className="form-select" onChange={handleChange} value={form.role}>
+                <select id="role" name="role" className={`form-select ${mode === 'dark' ? 'bg-dark text-light' : 'bg-light text-dark'}`} onChange={handleChange} value={form.role}>
                   <option value="user">Normal User</option>
                   <option value="owner">Shop Owner</option>
-                  {/* Register form එකේ Admin role එක පෙන්නන්නේ නැහැ. ඒක security measure එකක්. */}
                 </select>
               </div>
             </>
           )}
           <div className="mb-3">
             <label htmlFor="email" className="form-label"><FaEnvelope className="me-2" /> Email</label>
-            <input id="email" type="email" name="email" className="form-control" autoComplete="email" onChange={handleChange} required />
+            <input id="email" type="email" name="email" className={`form-control ${mode === 'dark' ? 'bg-dark text-light' : 'bg-light text-dark'}`} autoComplete="email" onChange={handleChange} required />
           </div>
           <div className="mb-4">
             <label htmlFor="password" className="form-label"><FaLock className="me-2" /> Password</label>
-            <input id="password" type="password" name="password" className="form-control" autoComplete={isRegister ? 'new-password' : 'current-password'} onChange={handleChange} required />
+            <input id="password" type="password" name="password" className={`form-control ${mode === 'dark' ? 'bg-dark text-light' : 'bg-light text-dark'}`} autoComplete={isRegister ? 'new-password' : 'current-password'} onChange={handleChange} required />
           </div>
           <button type="submit" className="btn btn-success w-100">
             {isRegister ? 'Register' : 'Login'}
           </button>
         </form>
-
-        <Divider sx={{ my: 2 }}>OR</Divider>
-
-        <button className="btn btn-outline-secondary w-100" onClick={() => navigate('/shops')}>
-          Browse Shops as a Guest
-        </button>
-
       </motion.div>
     </div>
   );
