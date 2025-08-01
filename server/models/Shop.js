@@ -12,6 +12,7 @@ const menuItemSchema = new mongoose.Schema({
 const shopSchema = new mongoose.Schema({
   shopName: { type: String, required: true },
   location: { type: String, default: 'N/A' },
+  phone: { type: String, default: '' }, // New: Phone number field
   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   menuItems: [menuItemSchema],
 }, { timestamps: true });

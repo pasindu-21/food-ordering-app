@@ -12,6 +12,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import PhoneIcon from '@mui/icons-material/Phone'; // New for phone display
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
@@ -145,6 +146,10 @@ const UserShopList = () => {
                   </Typography>
                   <Typography variant="body2" color="text.secondary" gutterBottom>
                     {shop.location ? `Location: ${shop.location}` : ''}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" gutterBottom display="flex" alignItems="center">
+                    <PhoneIcon fontSize="small" sx={{ mr: 0.5 }} /> {/* New: Phone icon */}
+                    Phone: {shop.phone || 'N/A'} {/* New: Phone display */}
                   </Typography>
                   {shop.owner && (
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>

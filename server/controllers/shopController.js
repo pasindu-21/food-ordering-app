@@ -2,11 +2,9 @@
 
 const Shop = require('../models/Shop');
 
-// <<<<---- FIX එක මෙතන ---->>>>
 // Get all shops (for public and user view)
 exports.getAllShops = async (req, res) => {
   try {
-    // req.user.role check එක අයින් කරා. දැන් මේ function එක public access එකට safe.
     const shops = await Shop.find().populate('owner', 'name email');
     res.json(shops);
   } catch (err) {
@@ -18,7 +16,6 @@ exports.getAllShops = async (req, res) => {
 // Get shops for the logged-in owner
 exports.getMyShops = async (req, res) => {
   try {
-    // This requires login, so req.user will exist.
     const myShops = await Shop.find({ owner: req.user._id });
     res.status(200).json(myShops);
   } catch (error) {
@@ -40,7 +37,7 @@ exports.addShop = async (req, res) => {
       return res.status(400).json({ msg: 'You already have a shop. Only one shop per owner is allowed.' });
     }
 
-    const { shopName, location, menuItems } = req.body;
+    const { shopName, location, phone, menuItems } = req.body; // New: phone
     if (!shopName || !Array.isArray(menuItems)) {
       return res.status(400).json({ msg: 'Invalid input. shopName and menuItems are required.' });
     }
@@ -48,6 +45,7 @@ exports.addShop = async (req, res) => {
     const newShop = new Shop({
       shopName,
       location: location || 'N/A',
+      phone: phone || '', // New: phone
       owner: req.user._id,
       menuItems: menuItems.map(item => ({
         name: item.name,
@@ -66,7 +64,7 @@ exports.addShop = async (req, res) => {
   }
 };
 
-// Update a shop (name/location/menu item update/delete/add)
+// Update a shop (name/location/phone/menu item update/delete/add)
 exports.updateShop = async (req, res) => {
   try {
     if (req.user.role !== 'owner') {
@@ -79,9 +77,10 @@ exports.updateShop = async (req, res) => {
       return res.status(403).json({ msg: 'You are not authorized to update this shop.' });
     }
 
-    // Update shop name/location if provided
+    // Update shop name/location/phone if provided
     shop.shopName = req.body.shopName || shop.shopName;
     shop.location = req.body.location || shop.location;
+    shop.phone = req.body.phone || shop.phone; // New: phone
 
     // Menu item full replace (for add new item via full array)
     if (Array.isArray(req.body.menuItems)) {

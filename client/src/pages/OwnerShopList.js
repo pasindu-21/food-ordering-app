@@ -17,13 +17,14 @@ import FreeBreakfastIcon from '@mui/icons-material/FreeBreakfast';
 import LunchDiningIcon from '@mui/icons-material/LunchDining';
 import DinnerDiningIcon from '@mui/icons-material/DinnerDining';
 import Chip from '@mui/material/Chip';
+import PhoneIcon from '@mui/icons-material/Phone'; // New for phone display
 
 const OwnerShopList = () => {
   const [shops, setShops] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentToken] = useState(sessionStorage.getItem('token'));
   const [editingShop, setEditingShop] = useState(null);
-  const [formData, setFormData] = useState({ shopName: '', location: '' });
+  const [formData, setFormData] = useState({ shopName: '', location: '', phone: '' }); // New: phone field
 
   // State for menu item edit dialog
   const [isMenuEditDialogOpen, setIsMenuEditDialogOpen] = useState(false);
@@ -45,9 +46,6 @@ const OwnerShopList = () => {
 
   // UX Improvement: Snackbar state
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-
-  // FIX: 'theme' variable which was unused has been removed.
-  // const theme = useTheme(); // THIS LINE IS REMOVED
 
   useEffect(() => {
     fetchShops();
@@ -71,7 +69,7 @@ const OwnerShopList = () => {
   // Shop edit handlers
   const handleEditClick = (shop) => {
     setEditingShop(shop._id);
-    setFormData({ shopName: shop.shopName, location: shop.location || '' });
+    setFormData({ shopName: shop.shopName, location: shop.location || '', phone: shop.phone || '' }); // New: phone
   };
 
   const handleEditSave = async () => {
@@ -86,7 +84,7 @@ const OwnerShopList = () => {
 
   const handleEditCancel = () => {
     setEditingShop(null);
-    setFormData({ shopName: '', location: '' });
+    setFormData({ shopName: '', location: '', phone: '' }); // New: phone
   };
 
   // Menu Item Edit Dialog Handlers
@@ -221,9 +219,13 @@ const OwnerShopList = () => {
                       <Stack spacing={2} mb={2}>
                         <TextField label="Shop Name" name="shopName" value={formData.shopName} onChange={handleFormChange} fullWidth autoFocus required />
                         <TextField label="Location" name="location" value={formData.location} onChange={handleFormChange} fullWidth />
+                        <TextField label="Phone Number" name="phone" value={formData.phone} onChange={handleFormChange} fullWidth /> {/* New: Phone input */}
                       </Stack>
                     ) : (
-                      <Typography color="text.secondary" mb={1} fontSize={15}>Location: {shop.location}</Typography>
+                      <>
+                        <Typography color="text.secondary" mb={1} fontSize={15}>Location: {shop.location}</Typography>
+                        <Typography color="text.secondary" mb={1} fontSize={15}>Phone: {shop.phone || 'N/A'}</Typography> {/* New: Phone display */}
+                      </>
                     )}
                     <Divider sx={{ my: 1 }} />
                     <Typography variant="subtitle2" color="secondary.main" fontWeight="bold" mb={1}>
@@ -255,15 +257,15 @@ const OwnerShopList = () => {
                     </Stack>
                     <Divider sx={{ my: 2 }} />
                     {addingItemInShop === shop._id ? (
-                       <Box component="form" onSubmit={(e) => { e.preventDefault(); handleAddMenuItem(shop); }} mt={1} display="flex" gap={1} flexWrap="wrap">
-                          <TextField size="small" label="Item Name" value={newMenuItem.name} onChange={e => setNewMenuItem({ ...newMenuItem, name: e.target.value })} required sx={{ width: 100 }} autoFocus />
-                          <TextField size="small" label="Price" type="number" value={newMenuItem.price} onChange={e => setNewMenuItem({ ...newMenuItem, price: e.target.value })} required sx={{ width: 70 }} />
-                          <TextField size="small" label="B.Qty" type="number" value={newMenuItem.breakfastQty} onChange={e => setNewMenuItem({ ...newMenuItem, breakfastQty: e.target.value })} sx={{ width: 60 }} />
-                          <TextField size="small" label="L.Qty" type="number" value={newMenuItem.lunchQty} onChange={e => setNewMenuItem({ ...newMenuItem, lunchQty: e.target.value })} sx={{ width: 60 }} />
-                          <TextField size="small" label="D.Qty" type="number" value={newMenuItem.dinnerQty} onChange={e => setNewMenuItem({ ...newMenuItem, dinnerQty: e.target.value })} sx={{ width: 60 }} />
-                          <IconButton color="success" type="submit"><SaveIcon /></IconButton>
-                          <IconButton color="secondary" onClick={() => setAddingItemInShop(null)}><CancelIcon /></IconButton>
-                       </Box>
+                      <Box component="form" onSubmit={(e) => { e.preventDefault(); handleAddMenuItem(shop); }} mt={1} display="flex" gap={1} flexWrap="wrap">
+                        <TextField size="small" label="Item Name" value={newMenuItem.name} onChange={e => setNewMenuItem({ ...newMenuItem, name: e.target.value })} required sx={{ width: 100 }} autoFocus />
+                        <TextField size="small" label="Price" type="number" value={newMenuItem.price} onChange={e => setNewMenuItem({ ...newMenuItem, price: e.target.value })} required sx={{ width: 70 }} />
+                        <TextField size="small" label="B.Qty" type="number" value={newMenuItem.breakfastQty} onChange={e => setNewMenuItem({ ...newMenuItem, breakfastQty: e.target.value })} sx={{ width: 60 }} />
+                        <TextField size="small" label="L.Qty" type="number" value={newMenuItem.lunchQty} onChange={e => setNewMenuItem({ ...newMenuItem, lunchQty: e.target.value })} sx={{ width: 60 }} />
+                        <TextField size="small" label="D.Qty" type="number" value={newMenuItem.dinnerQty} onChange={e => setNewMenuItem({ ...newMenuItem, dinnerQty: e.target.value })} sx={{ width: 60 }} />
+                        <IconButton color="success" type="submit"><SaveIcon /></IconButton>
+                        <IconButton color="secondary" onClick={() => setAddingItemInShop(null)}><CancelIcon /></IconButton>
+                      </Box>
                     ) : (
                       <Button fullWidth variant="outlined" startIcon={<AddIcon />} onClick={() => setAddingItemInShop(shop._id)}>Add New Item</Button>
                     )}
