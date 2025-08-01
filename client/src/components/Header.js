@@ -1,22 +1,17 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { AppBar, Toolbar, Typography, Box, Button, IconButton, Tooltip } from '@mui/material';
 import LogoutButton from './LogoutButton';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import { useColorMode } from '../context/ColorModeContext';
+import { UserContext } from '../context/UserContext'; // New import
 
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { mode, toggleColorMode } = useColorMode();
-
-  let role = null;
-  try {
-    role = JSON.parse(sessionStorage.getItem('user'))?.role;
-  } catch {
-    role = null;
-  }
+  const { user } = useContext(UserContext); // Use global user state
 
   // Auth page එකේ nav buttons hide කරන්න, ඒත් logo සහ dark mode keep කරන්න
   const isAuthPage = location.pathname === '/auth';
@@ -24,14 +19,14 @@ const Header = () => {
   const renderNavButtons = () => {
     if (isAuthPage) return null; // Auth page එකේ nav buttons hide කරන්න
 
-    if (role === 'admin') {
+    if (user?.role === 'admin') {
       return (
         <>
           <Button component={Link} to="/admin-dashboard" color="inherit">Admin Panel</Button>
           <LogoutButton />
         </>
       );
-    } else if (role === 'owner') {
+    } else if (user?.role === 'owner') {
       return (
         <>
           <Button component={Link} to="/owner-home" color="inherit">Home</Button>
@@ -41,7 +36,7 @@ const Header = () => {
           <LogoutButton />
         </>
       );
-    } else if (role === 'user') {
+    } else if (user?.role === 'user') {
       return (
         <>
           <Button component={Link} to="/user-home" color="inherit">Home</Button>
@@ -62,9 +57,9 @@ const Header = () => {
   };
 
   const handleLogoClick = () => {
-    if (role === 'admin') navigate('/admin-dashboard');
-    else if (role === 'owner') navigate('/owner-home');
-    else if (role === 'user') navigate('/user-home');
+    if (user?.role === 'admin') navigate('/admin-dashboard');
+    else if (user?.role === 'owner') navigate('/owner-home');
+    else if (user?.role === 'user') navigate('/user-home');
     else navigate('/'); // Non-logged-in ට shops page එකට (default "/")
   };
 

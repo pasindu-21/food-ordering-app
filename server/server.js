@@ -11,6 +11,7 @@ const shopRoutes = require('./routes/shopRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const userRoutes = require('./routes/userRoutes'); // New: Import userRoutes
 
 // Automation Job
 const startDailyJobs = require('./cron-jobs');
@@ -29,6 +30,7 @@ app.use('/api/shops', shopRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/users', userRoutes); // New: Mount userRoutes
 
 // Basic route
 app.get('/', (req, res) => {

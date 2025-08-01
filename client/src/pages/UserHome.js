@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Card,
@@ -7,10 +7,17 @@ import {
   Button,
   Grid,
   Box,
+  Paper,
+  TextField,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import { Fastfood, ListAlt } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@mui/material/styles';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext'; // Import useAuth (updated from AuthContext)
 
 const StyledCard = styled(Card)(({ theme }) => ({
   padding: theme.spacing(4),
@@ -39,6 +46,122 @@ const ActionButton = styled(Button)(({ theme }) => ({
     transform: 'scale(1.05)'
   }
 }));
+
+// Updated UserProfile component with fetching from DB
+const UserProfile = () => {
+  const theme = useTheme();
+  const { user, updateUser } = useAuth(); // Use global context
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+  useEffect(() => {
+    if (user) {
+      setName(user.name || '');
+      setPhone(user.phone || '');
+      setLoading(false);
+    } else {
+      setLoading(true);
+      // Fetch if not available
+      fetchUser();
+    }
+  }, [user]);
+
+  const fetchUser = async () => {
+    try {
+      const token = sessionStorage.getItem('token');
+      const res = await axios.get('http://localhost:5000/api/users/profile', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      updateUser(res.data); // Update global context
+    } catch (error) {
+      setSnackbar({ open: true, message: 'Failed to load profile from database', severity: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!name.trim()) {
+      setSnackbar({ open: true, message: 'Name cannot be empty', severity: 'error' });
+      return;
+    }
+    setLoading(true);
+    try {
+      const token = sessionStorage.getItem('token');
+      const res = await axios.patch('http://localhost:5000/api/users/profile', { name: name.trim(), phone: phone.trim() }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      updateUser(res.data); // Update global context
+      setSnackbar({ open: true, message: 'Profile updated successfully', severity: 'success' });
+      setEditMode(false);
+    } catch (error) {
+      setSnackbar({ open: true, message: 'Failed to update profile', severity: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <Typography>Loading profile...</Typography>;
+  }
+
+  if (!user) {
+    return <Typography>Failed to load profile.</Typography>;
+  }
+
+  return (
+    <Paper elevation={3} sx={{ p: 3, borderRadius: 4, mt: 4, bgcolor: theme.palette.background.paper, maxWidth: 400, mx: 'auto' }}>
+      <Typography variant="h5" gutterBottom>My Profile</Typography>
+      <TextField
+        label="Name"
+        value={name || ''} // Fix: fallback to empty string
+        onChange={e => setName(e.target.value)}
+        fullWidth
+        margin="normal"
+        disabled={!editMode}
+      />
+      <TextField
+        label="Email"
+        value={user.email || ''} // Fix: fallback to empty string
+        fullWidth
+        margin="normal"
+        disabled
+      />
+      <TextField
+        label="Phone Number"
+        value={phone || ''} // Fix: fallback to empty string
+        onChange={e => setPhone(e.target.value)}
+        fullWidth
+        margin="normal"
+        disabled={!editMode}
+      />
+      <Box sx={{ mt: 2, textAlign: 'right' }}>
+        {editMode ? (
+          <>
+            <Button variant="outlined" onClick={() => setEditMode(false)} sx={{ mr: 1 }}>
+              Cancel
+            </Button>
+            <Button variant="contained" color="primary" onClick={handleSave} disabled={loading}>
+              {loading ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </>
+        ) : (
+          <Button variant="contained" color="primary" onClick={() => setEditMode(true)}>
+            Edit Profile
+          </Button>
+        )}
+      </Box>
+      <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </Paper>
+  );
+};
 
 const UserHome = () => {
   const navigate = useNavigate();
@@ -106,6 +229,9 @@ const UserHome = () => {
           </Box>
         </CardContent>
       </StyledCard>
+
+      {/* Added User Profile section below the main card */}
+      <UserProfile />
     </Container>
   );
 };

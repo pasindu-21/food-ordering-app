@@ -20,7 +20,8 @@ const orderSchema = new mongoose.Schema({
     default: 'pending'
   },
   location: { type: String, required: true },
-  timeSlot: { type: String, enum: ['Breakfast', 'Lunch', 'Dinner'], required: true }, // New time slot field
+  timeSlot: { type: String, enum: ['Breakfast', 'Lunch', 'Dinner'], required: true }, // Slot name
+  slotTime: { type: String, required: true }, // New field for display time (e.g., '8.00 A.M')
   isArchived: {
     type: Boolean,
     default: false

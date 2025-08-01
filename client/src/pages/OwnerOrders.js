@@ -11,6 +11,7 @@ import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import PersonIcon from '@mui/icons-material/Person';
+import PhoneIcon from '@mui/icons-material/Phone'; // New for phone display
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import SearchIcon from '@mui/icons-material/Search';
@@ -19,6 +20,13 @@ import { useTheme } from '@mui/material/styles';
 const timeSlots = ['Breakfast', 'Lunch', 'Dinner'];
 const locations = ['A', 'B', 'C', 'D'];
 
+// New mapping for time slot display with times
+const TIME_SLOT_DISPLAY = {
+  Breakfast: 'Breakfast - 8.00 A.M',
+  Lunch: 'Lunch - 12.00 P.M',
+  Dinner: 'Dinner - 8.00 P.M'
+};
+
 const OwnerOrders = () => {
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -26,7 +34,10 @@ const OwnerOrders = () => {
   const [search, setSearch] = useState("");
   const theme = useTheme();
 
-  useEffect(() => { fetchOrders(); }, []);
+  useEffect(() => {
+    fetchOrders(); // Only initial load, no auto refresh
+  }, []);
+
   const fetchOrders = () => {
     setIsLoading(true);
     const token = sessionStorage.getItem('token');
@@ -43,9 +54,12 @@ const OwnerOrders = () => {
     axios.put(`http://localhost:5000/api/orders/${orderId}/status`, { status }, {
       headers: { Authorization: `Bearer ${token}` }
     })
-      .then(() => {
+      .then(res => {
+        // Real-time local update: Find and update the order in local state
+        setOrders(prevOrders => prevOrders.map(order => 
+          order._id === orderId ? { ...order, status: res.data.status } : order
+        ));
         setSnackbar({ open: true, message: `Order status updated to ${status}!`, severity: 'success' });
-        fetchOrders();
       })
       .catch(() => setSnackbar({ open: true, message: 'Failed to update status', severity: 'error' }));
   };
@@ -121,7 +135,7 @@ const OwnerOrders = () => {
                 <CardContent>
                   <Typography variant="h6" fontWeight={700} gutterBottom>
                     <AccessTimeIcon sx={{ mr: 1, color: 'primary.main' }} />
-                    {slot}
+                    {TIME_SLOT_DISPLAY[slot] || slot} {/* Updated: Show with time */}
                   </Typography>
                   {locations.map(loc => (
                     <Accordion key={loc} sx={{ boxShadow: 'none', borderBottom: '1px solid ' + theme.palette.divider }}>
@@ -203,6 +217,10 @@ const OwnerOrders = () => {
                       <Typography variant="body2">{order.user?.name} ({order.user?.email})</Typography>
                     </Stack>
                     <Stack direction="row" alignItems="center" spacing={1} mb={1}>
+                      <PhoneIcon color="action" fontSize="small" /> {/* New: Phone display */}
+                      <Typography variant="body2">Phone: {order.user?.phone || 'N/A'}</Typography>
+                    </Stack>
+                    <Stack direction="row" alignItems="center" spacing={1} mb={1}>
                       <ReceiptLongIcon color="action" fontSize="small" />
                       <Typography variant="body2" fontWeight={500}>Total: Rs.{order.total}</Typography>
                     </Stack>
@@ -212,7 +230,7 @@ const OwnerOrders = () => {
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                       <AccessTimeIcon fontSize="small" sx={{ mr: 0.5 }} />
-                      {order.timeSlot || 'Not Specified'}
+                      {TIME_SLOT_DISPLAY[order.timeSlot] || order.timeSlot || 'Not Specified'} {/* Updated: Show with time */}
                     </Typography>
                     <Typography variant="subtitle2" fontWeight={600} mb={1}>Items:</Typography>
                     <Stack spacing={0.5}>

@@ -1,7 +1,9 @@
+// App.js (updated)
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
+import { UserProvider } from './context/UserContext'; // Import the provider
 
-// Component & Page Imports
+// Component & Page Imports (keep your existing imports)
 import AuthForm from './components/AuthForm';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -27,7 +29,7 @@ function Root() {
   useEffect(() => {
     const token = sessionStorage.getItem('token');
     const user = JSON.parse(sessionStorage.getItem('user'));
-    // Only redirect if on /auth and token exists - මේකෙන් infinite loop prevent වෙයි
+    // Only redirect if on /auth and token exists
     if (token && user && window.location.pathname === '/auth') {
       const userRole = user.role;
       let redirectPath = '';
@@ -40,7 +42,7 @@ function Root() {
       }
       navigate(redirectPath, { replace: true });
     }
-  }, [navigate]); // Dependency stable, no loop
+  }, [navigate]);
 
   return (
     <>
@@ -67,7 +69,7 @@ function Root() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         
-        {/* Add /shops route to match links (e.g., from Header) - මේකෙන් "no match" error solve වෙයි */}
+        {/* Add /shops route to match links (e.g., from Header) */}
         <Route path="/shops" element={<UserShopList />} />
       </Routes>
       <Footer />
@@ -78,9 +80,11 @@ function Root() {
 function App() {
   return (
     <ColorModeProvider>
-      <Router>
-        <Root /> {/* All routing and auth check inside Root */}
-      </Router>
+      <UserProvider> {/* Wrap with UserProvider for global user state */}
+        <Router>
+          <Root /> {/* All routing and auth check inside Root */}
+        </Router>
+      </UserProvider>
     </ColorModeProvider>
   );
 }

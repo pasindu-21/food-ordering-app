@@ -1,3 +1,4 @@
+// server/models/User.js
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
@@ -9,6 +10,7 @@ const userSchema = new mongoose.Schema({
     enum: ["user", "owner", "admin"],
     required: true
   },
+  phone: { type: String, default: '' }, // Phone number field (optional)
   isSuspended: {
     type: Boolean,
     default: false

@@ -8,9 +8,9 @@ import DeleteIcon from '@mui/icons-material/Delete';
 
 const LOCATIONS = ['A', 'B', 'C', 'D'];
 const TIME_SLOTS = [
-  { value: 'breakfast', label: 'Breakfast - 8.00 A.M' },
-  { value: 'lunch', label: 'Lunch - 12.00 P.M' },
-  { value: 'dinner', label: 'Dinner - 8.00 P.M' }
+  { value: 'Breakfast', label: 'Breakfast - 8.00 A.M' },
+  { value: 'Lunch', label: 'Lunch - 12.00 P.M' },
+  { value: 'Dinner', label: 'Dinner - 8.00 P.M' }
 ]; // Updated with labels including times
 
 const OrderForm = ({ shop, onOrderPlaced }) => {
@@ -39,8 +39,12 @@ const OrderForm = ({ shop, onOrderPlaced }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (orderItems.length === 0 || !timeSlot) { // Time slot required
-      alert('Please add at least one item and select a time slot.');
+    if (orderItems.length === 0) {
+      alert('Please add at least one item.');
+      return;
+    }
+    if (!timeSlot) { // Fixed: Validate timeSlot before submit
+      alert('Please select a time slot.');
       return;
     }
     setLoading(true);
@@ -61,7 +65,7 @@ const OrderForm = ({ shop, onOrderPlaced }) => {
       setQty(1);
       setTimeSlot(''); // Reset time slot
     } catch (err) {
-      alert('Order failed');
+      alert('Order failed: ' + (err.response?.data?.msg || 'Server error'));
     } finally {
       setLoading(false);
     }

@@ -1,10 +1,10 @@
+// src/index.js (example, ඔයාගෙ file එකට match කරගන්න)
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import { AuthProvider } from './context/AuthContext'; // Add this import
+import { AuthProvider } from './context/AuthContext'; // Fixed: Use named import { AuthProvider }
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

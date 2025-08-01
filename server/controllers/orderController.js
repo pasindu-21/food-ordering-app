@@ -1,6 +1,13 @@
 const Order = require('../models/Order');
 const Shop = require('../models/Shop');
 
+// Mapping for timeSlot to slotTime
+const TIME_SLOT_MAPPING = {
+  Breakfast: '8.00 A.M',
+  Lunch: '12.00 P.M',
+  Dinner: '8.00 P.M'
+};
+
 // 1. User: Place order
 exports.createOrder = async (req, res) => {
   try {
@@ -17,6 +24,10 @@ exports.createOrder = async (req, res) => {
     const itemsWithStatus = items.map(item => ({ ...item, status: 'pending' }));
     const total = items.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
+    // Set slotTime based on timeSlot
+    const slotTime = TIME_SLOT_MAPPING[timeSlot];
+    if (!slotTime) return res.status(400).json({ msg: 'Invalid time slot.' });
+
     const order = await Order.create({
       user: req.user._id,
       shop: shopId,
@@ -24,6 +35,7 @@ exports.createOrder = async (req, res) => {
       total,
       location,
       timeSlot, // Save time slot
+      slotTime, // Save display time
       owner: shop.owner
     });
 
@@ -59,7 +71,7 @@ exports.getOwnerOrders = async (req, res) => {
       isArchived: false,
       createdAt: { $gte: startOfToday }
     })
-      .populate('user', 'name email')
+      .populate('user', 'name email phone') // Updated: Added 'phone' to populate
       .populate('shop', 'shopName')
       .sort({ createdAt: -1 });
 
