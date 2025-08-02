@@ -1,17 +1,16 @@
 import React, { useContext } from 'react';
 import { AppBar, Toolbar, Typography, Box, Button, IconButton, Tooltip } from '@mui/material';
-import LogoutButton from './LogoutButton';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import { useColorMode } from '../context/ColorModeContext';
-import { UserContext } from '../context/UserContext'; // New import
+import { UserContext } from '../context/UserContext'; // Import UserContext
 
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { mode, toggleColorMode } = useColorMode();
-  const { user } = useContext(UserContext); // Use global user state
+  const { user, logout } = useContext(UserContext); // Use global user and logout
 
   // Auth page එකේ nav buttons hide කරන්න, ඒත් logo සහ dark mode keep කරන්න
   const isAuthPage = location.pathname === '/auth';
@@ -23,7 +22,16 @@ const Header = () => {
       return (
         <>
           <Button component={Link} to="/admin-dashboard" color="inherit">Admin Panel</Button>
-          <LogoutButton />
+          <Button 
+            variant="contained"  // Add contained for background
+            color="error"        // Add error for red background
+            onClick={() => {
+              logout(); // Call logout from context
+              navigate('/'); // Redirect to home
+            }}
+          >
+            Logout
+          </Button>
         </>
       );
     } else if (user?.role === 'owner') {
@@ -33,7 +41,16 @@ const Header = () => {
           <Button component={Link} to="/my-shops" color="inherit">My Shop</Button>
           <Button component={Link} to="/owner-orders" color="inherit">Today's Orders</Button>
           <Button component={Link} to="/daily-reports" color="inherit">Daily Reports</Button>
-          <LogoutButton />
+          <Button 
+            variant="contained"  // Add contained for background
+            color="error"        // Add error for red background
+            onClick={() => {
+              logout(); // Call logout
+              navigate('/'); // Redirect
+            }}
+          >
+            Logout
+          </Button>
         </>
       );
     } else if (user?.role === 'user') {
@@ -42,7 +59,16 @@ const Header = () => {
           <Button component={Link} to="/user-home" color="inherit">Home</Button>
           <Button component={Link} to="/shops" color="inherit">View Shops</Button>
           <Button component={Link} to="/my-orders" color="inherit">My Orders</Button>
-          <LogoutButton />
+          <Button 
+            variant="contained"  // Add contained for background
+            color="error"        // Add error for red background
+            onClick={() => {
+              logout(); // Call logout
+              navigate('/'); // Redirect
+            }}
+          >
+            Logout
+          </Button>
         </>
       );
     } else {

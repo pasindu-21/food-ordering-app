@@ -1,4 +1,3 @@
-// src/context/AuthContext.js
 import { createContext, useState, useEffect, useContext } from 'react';
 
 export const AuthContext = createContext();
@@ -8,29 +7,42 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
+    const token = sessionStorage.getItem('token');
+    const storedUser = sessionStorage.getItem('user');
     if (token) setIsAuthenticated(true);
-    if (storedUser) setUser(JSON.parse(storedUser));
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+      console.log('Loaded user from sessionStorage:', parsedUser); // Debug
+      // FIX: Load userId if not set
+      if (!sessionStorage.getItem('userId') && parsedUser._id) {
+        sessionStorage.setItem('userId', parsedUser._id);
+      }
+    }
   }, []);
 
   const login = (newToken, newUser) => {
-    localStorage.setItem('token', newToken);
-    localStorage.setItem('user', JSON.stringify(newUser));
+    sessionStorage.setItem('token', newToken);
+    sessionStorage.setItem('user', JSON.stringify(newUser));
+    sessionStorage.setItem('userId', newUser._id); // FIX: Store _id as userId
     setIsAuthenticated(true);
     setUser(newUser);
+    console.log('Logged in user:', newUser); // Debug
+    console.log('Stored User ID:', newUser._id); // Debug
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('userId');
     setIsAuthenticated(false);
     setUser(null);
   };
 
   const updateUser = (updatedUser) => {
     setUser(updatedUser);
-    localStorage.setItem('user', JSON.stringify(updatedUser));
+    sessionStorage.setItem('user', JSON.stringify(updatedUser));
+    sessionStorage.setItem('userId', updatedUser._id); // Update userId
   };
 
   return (

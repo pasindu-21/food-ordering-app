@@ -1,17 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 
 const PrivateRoute = ({ children }) => {
   const location = useLocation();
-  const [isAuthenticated, setIsAuthenticated] = useState(!!sessionStorage.getItem('token'));
+  const isAuthenticated = !!sessionStorage.getItem('token'); // Direct check every time
 
-  useEffect(() => {
-    const token = sessionStorage.getItem('token');
-    setIsAuthenticated(!!token); // Update state on mount
-  }, []); // Empty dependency - run only once
+  console.log('PrivateRoute check - isAuthenticated:', isAuthenticated); // Debug
 
   if (!isAuthenticated) {
-    // Redirect to /auth with current location state
     return <Navigate to="/auth" state={{ from: location, msg: 'Please login first!' }} replace />;
   }
 
