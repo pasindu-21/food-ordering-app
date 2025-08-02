@@ -13,13 +13,13 @@ import CloseIcon from '@mui/icons-material/Close';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import ExpandLess from '@mui/icons-material/ExpandLess';
-import PhoneIcon from '@mui/icons-material/Phone';
+
 import StarIcon from '@mui/icons-material/Star';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
 const placeholderImg =
-  "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=600&q=80";
+  "https://i.pinimg.com/1200x/71/50/03/715003052eb5c3f532ac8bca71324838.jpg";
 
 const UserShopList = () => {
   const [shops, setShops] = useState([]);
@@ -183,9 +183,9 @@ const UserShopList = () => {
       <Box textAlign="center" mb={4}>
         <Typography variant={isMobile ? "h5" : "h4"} fontWeight={700} display="inline-flex" alignItems="center" color="primary.main" gutterBottom>
           <StorefrontIcon fontSize="large" sx={{ mr: 1 }} />
-          All Available Shops
+          Available Shops
         </Typography>
-        <Typography color="text.secondary" mt={1}>
+        <Typography color="text.secondary" mt={1}fontSize="large">
           Choose a shop to view menu and place your order.
         </Typography>
         <Paper
@@ -238,7 +238,7 @@ const UserShopList = () => {
                 <Card
                   elevation={6}
                   sx={{
-                    height: '100%',
+                    height: '97%',
                     display: 'flex',
                     flexDirection: 'column',
                     borderRadius: 4,
@@ -252,7 +252,7 @@ const UserShopList = () => {
                 >
                   <CardMedia
                     component="img"
-                    height="170"
+                    height="150"
                     image={shop.image || placeholderImg}
                     alt={shop.shopName}
                     sx={{ objectFit: "cover", borderTopLeftRadius: 16, borderTopRightRadius: 16 }}
@@ -265,14 +265,10 @@ const UserShopList = () => {
                       {shop.location ? `Location: ${shop.location}` : ''}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" gutterBottom display="flex" alignItems="center">
-                      <PhoneIcon fontSize="small" sx={{ mr: 0.5 }} />
-                      Phone: {shop.phone || 'N/A'}
+                      
+                      Mobile No: {shop.phone || 'N/A'}
                     </Typography>
-                    {shop.owner && (
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                        <span style={{ color: theme.palette.primary.main, fontWeight: 600 }}>Owner:</span> {shop.owner.name}
-                      </Typography>
-                    )}
+                    
                     <Box sx={{ mt: 1 }}>
                       <Box sx={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                         <Typography variant="subtitle2" color="primary" fontWeight={600} gutterBottom>Menu</Typography>
@@ -282,7 +278,7 @@ const UserShopList = () => {
                           </Button>
                         )}
                       </Box>
-                      <List dense sx={{ bgcolor: theme.palette.action.hover, borderRadius: 2, px: 1, py: 0.5, maxHeight: 160, overflow: 'auto' }}>
+                      <List dense sx={{ bgcolor: theme.palette.action.hover, borderRadius: 2, px: 1, py: 0.5, maxHeight: 120, overflow: 'auto' }}>
                         {(shop.menuItems && shop.menuItems.length > 0
                           ? expandedShopId === shop._id
                             ? shop.menuItems
@@ -326,15 +322,10 @@ const UserShopList = () => {
                         {data.averageRating} / 5
                       </Typography>
                     </Box>
-                    <Box sx={{ mt: 2, textAlign: 'center' }}>
-                      <Button variant="outlined" color="primary" onClick={() => handleOpenReview(shop._id)}>
-                        Add Review
-                      </Button>
-                    </Box>
-                  </CardContent>
-                  <CardActions sx={{ mt: 'auto', p: isMobile ? 1 : 2 }}>
+                    <CardActions sx={{ mt: 'auto', p: isMobile ? 1 : 2 }}>
                     <Button
                       fullWidth
+                      height
                       variant="contained"
                       size={isMobile ? "medium" : "large"}
                       sx={{
@@ -347,6 +338,8 @@ const UserShopList = () => {
                       Order
                     </Button>
                   </CardActions>
+                  </CardContent>
+                  
                 </Card>
               </Grid>
             );

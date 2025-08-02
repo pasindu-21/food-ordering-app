@@ -1,140 +1,92 @@
 import React from 'react';
-import { Box, Link, Typography, IconButton, Stack, Divider, Slide } from '@mui/material';
-import { styled, useTheme } from '@mui/material/styles';
-import GitHubIcon from '@mui/icons-material/GitHub';
+import {
+  Box,
+  Typography,
+  Link,
+  IconButton,
+  Stack,
+  Divider,
+  useTheme,
+  useMediaQuery,
+} from '@mui/material';
+
 import FacebookIcon from '@mui/icons-material/Facebook';
 import InstagramIcon from '@mui/icons-material/Instagram';
-
-const FooterBar = styled(Box)(({ theme }) => ({
-  width: "100%",
-  marginTop: theme.spacing(0),
-  padding: theme.spacing(3, 2),
-  background: theme.palette.mode === 'dark'
-    ? 'linear-gradient(90deg, #181c23 0%, #232632 100%)'
-    : 'linear-gradient(90deg, #ecf0f3 0%, #fafafa 100%)',
-  textAlign: 'center',
-  borderTop: `1.5px solid ${theme.palette.divider}`,
-  color: theme.palette.text.secondary,
-  fontSize: '1.06rem',
-  boxShadow: "0 -8px 32px 0 rgba(60,80,120,0.07)",
-  position: "relative"
-}));
-
-const SOCIALS = [
-  {
-    href: "https://github.com/",
-    icon: <GitHubIcon fontSize="medium" />,
-    label: "GitHub",
-    color: "#181717"
-  },
-  {
-    href: "https://facebook.com/",
-    icon: <FacebookIcon fontSize="medium" />,
-    label: "Facebook",
-    color: "#1877F3"
-  },
-  {
-    href: "https://instagram.com/",
-    icon: <InstagramIcon fontSize="medium" />,
-    label: "Instagram",
-    color: "#E1306C"
-  }
-];
-
-const LINKS = [
-  { href: "/about", label: "About" },
-  { href: "/privacy", label: "Privacy Policy" },
-  { href: "/contact", label: "Contact" }
-];
+import TwitterIcon from '@mui/icons-material/Twitter';
 
 const Footer = () => {
   const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
-    <Slide direction="up" in={true} mountOnEnter unmountOnExit timeout={700}>
-      <FooterBar role="contentinfo">
-        <Stack
-          direction={{ xs: 'column', sm: 'row' }}
-          spacing={2}
-          alignItems="center"
-          justifyContent="center"
-          sx={{ mb: 1 }}
-        >
-          <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.secondary'}}>
-            &copy; {new Date().getFullYear()}{" "}
-            <b style={{ color: theme.palette.primary.main }}>FoodHub</b> &middot; All Rights Reserved
-          </Typography>
-          <Stack direction="row" spacing={1}>
-            {SOCIALS.map(({ href, icon, label, color }) => (
-              <IconButton
-                key={label}
-                href={href}
-                sx={{
-                  color: color,
-                  opacity: 0.7,
-                  transition: "transform 0.2s, opacity 0.2s",
-                  "&:hover": {
-                    transform: "scale(1.12)",
-                    opacity: 1,
-                    color: theme.palette.primary.main
-                  }
-                }}
-                aria-label={`Visit our ${label}`}
-                title={label}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {icon}
-              </IconButton>
-            ))}
-          </Stack>
-        </Stack>
+    <Box
+      component="footer"
+      sx={{
+        width: '100%',
+        bgcolor: isDark ? '#494949ff' : '#d5d5d5ff',
+        color: isDark ? '#fcf5f5' : '#555',
+        pt: 2,
+        pb: 1,
+        px: 2,
+        textAlign: 'center',
+        borderTop: `1px solid ${isDark ? '#333' : '#ddd'}`,
+      }}
+    >
+      <Stack
+        direction={isMobile ? 'column' : 'row'}
+        spacing={2}
+        alignItems="center"
+        justifyContent="center"
+        sx={{ mb: 1 }}
+      >
+        <Link href="/privacy" underline="hover" color="inherit" sx={{ fontSize: 13 }}>
+          Privacy
+        </Link>
+        <Link href="/about" underline="hover" color="inherit" sx={{ fontSize: 13 }}>
+          About Us
+        </Link>
+        <Link href="/contact" underline="hover" color="inherit" sx={{ fontSize: 13 }}>
+          Contact
+        </Link>
+      </Stack>
 
-        <Divider sx={{ mb: 1, mt: 0.5, opacity: 0.4 }} />
-
-        <Stack
-          direction="row"
-          spacing={2}
-          justifyContent="center"
-          sx={{
-            mt: 1,
-            mb: 1,
-            flexWrap: 'wrap'
-          }}
+      <Stack direction="row" justifyContent="center" spacing={1}>
+        <IconButton
+          size="small"
+          href="https://facebook.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          sx={{ color: isDark ? '#888' : '#333', '&:hover': { color: theme.palette.primary.main } }}
         >
-          {LINKS.map(({ href, label }) => (
-            <Link
-              key={label}
-              href={href}
-              color="inherit"
-              underline="hover"
-              sx={{
-                opacity: 0.8,
-                fontSize: 14,
-                "&:hover": {
-                  color: theme.palette.primary.main,
-                  opacity: 1
-                }
-              }}
-            >
-              {label}
-            </Link>
-          ))}
-        </Stack>
-        <Typography variant="caption" sx={{ color: "text.secondary", opacity: 0.8 }}>
-          Built with&nbsp;
-          <Link
-            href="https://mui.com/"
-            target="_blank"
-            rel="noopener"
-            underline="hover"
-            sx={{ color: "primary.main", fontWeight: 700 }}
-          >
-            Material-UI
-          </Link>
-        </Typography>
-      </FooterBar>
-    </Slide>
+          <FacebookIcon fontSize="small" />
+        </IconButton>
+        <IconButton
+          size="small"
+          href="https://instagram.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          sx={{ color: isDark ? '#888' : '#333', '&:hover': { color: theme.palette.primary.main } }}
+        >
+          <InstagramIcon fontSize="small" />
+        </IconButton>
+        <IconButton
+          size="small"
+          href="https://twitter.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          sx={{ color: isDark ? '#888' : '#333', '&:hover': { color: theme.palette.primary.main } }}
+        >
+          <TwitterIcon fontSize="small" />
+        </IconButton>
+      </Stack>
+
+      <Divider sx={{ my: 1, opacity: 0.3 }} />
+
+      <Typography variant="caption" sx={{ fontSize: 12, color: isDark ? '#fcf5f5' : '#777' }}>
+        © {new Date().getFullYear()} FoodHub. All rights reserved.
+      </Typography>
+    </Box>
   );
 };
 

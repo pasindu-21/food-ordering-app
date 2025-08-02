@@ -121,7 +121,7 @@ const OwnerHome = () => {
                   Owner Dashboard
                 </Typography>
                 <Typography
-                  variant="body1"
+                  variant="h6"
                   color="text.secondary"
                   textAlign="center"
                   mb={1.5}
@@ -151,7 +151,7 @@ const OwnerHome = () => {
                       }}
                       icon={<StorefrontIcon />}
                     >
-                      🎉 You already own a shop! Manage your business below.
+                       You already own a shop! Manage your business below.
                     </Alert>
                   ) : (
                     <Button

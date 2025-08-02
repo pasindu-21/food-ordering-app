@@ -181,7 +181,7 @@ const UserHome = () => {
                 textShadow: '2px 2px 4px rgba(0,0,0,0.1)'
               }}
             >
-              Welcome to FoodHub 🍔
+              Welcome to UniFood 
             </Typography>
 
             <Typography
@@ -202,7 +202,7 @@ const UserHome = () => {
                   onClick={() => navigate('/shops')}
                   sx={{ py: 2 }}
                 >
-                  Explore Restaurants
+                  View Available Shops
                 </ActionButton>
               </Grid>
               <Grid item xs={12} sm={6} md={5}>
@@ -224,7 +224,7 @@ const UserHome = () => {
               color="text.secondary"
               sx={{ mt: 4 }}
             >
-              Join over 50,000 satisfied food lovers!
+              Thank You
             </Typography>
           </Box>
         </CardContent>

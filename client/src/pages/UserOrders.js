@@ -322,11 +322,11 @@ const UserOrders = () => {
   return (
     <Box sx={{ bgcolor: theme.palette.background.default, minHeight: '100vh', py: { xs: 2, md: 4 } }}>
       <Container maxWidth="md">
-        <Typography variant="h4" gutterBottom fontWeight="700" color="primary.main" align="center">
+        <Typography variant="h3" gutterBottom fontWeight="700" color="primary.main" align="center">
           My Orders
         </Typography>
-        <Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 1 }}>
-          Track your current and past orders, by shop and date.
+        <Typography variant="h5" color="text.secondary" align="center" sx={{ mb: 1 }}>
+          Track your current and past orders
         </Typography>
         {/* Order Stats Row */}
         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
