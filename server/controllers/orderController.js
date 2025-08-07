@@ -1,19 +1,30 @@
+// server/controllers/orderController.js - Updated with quantity reduction
 const Order = require('../models/Order');
 const Shop = require('../models/Shop');
+const mongoose = require('mongoose');
 
-// Mapping for timeSlot to slotTime
 const TIME_SLOT_MAPPING = {
   Breakfast: '8.00 A.M',
   Lunch: '12.00 P.M',
   Dinner: '8.00 P.M'
 };
 
-// 1. User: Place order
+// Helper function to get quantity field based on time slot
+const getQuantityField = (timeSlot) => {
+  switch(timeSlot) {
+    case 'Breakfast': return 'availableBreakfastQty';
+    case 'Lunch': return 'availableLunchQty';  
+    case 'Dinner': return 'availableDinnerQty';
+    default: return null;
+  }
+};
+
+// 1. User: Place order with quantity reduction
 exports.createOrder = async (req, res) => {
   try {
     if (req.user.role !== 'user') return res.status(403).json({ msg: 'Only users can place orders.' });
 
-    const { shopId, items, location, timeSlot } = req.body; // New timeSlot
+    const { shopId, items, location, timeSlot } = req.body;
     if (!shopId || !items || !Array.isArray(items) || items.length === 0 || !location || !timeSlot) {
       return res.status(400).json({ msg: 'Invalid order data. Time slot is required.' });
     }
@@ -21,32 +32,77 @@ exports.createOrder = async (req, res) => {
     const shop = await Shop.findById(shopId);
     if (!shop) return res.status(404).json({ msg: 'Shop not found.' });
 
-    const itemsWithStatus = items.map(item => ({ ...item, status: 'pending' }));
-    const total = items.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    // Start database transaction for atomic operation
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    // Set slotTime based on timeSlot
-    const slotTime = TIME_SLOT_MAPPING[timeSlot];
-    if (!slotTime) return res.status(400).json({ msg: 'Invalid time slot.' });
+    try {
+      const quantityField = getQuantityField(timeSlot);
+      if (!quantityField) {
+        throw new Error('Invalid time slot.');
+      }
 
-    const order = await Order.create({
-      user: req.user._id,
-      shop: shopId,
-      items: itemsWithStatus,
-      total,
-      location,
-      timeSlot, // Save time slot
-      slotTime, // Save display time
-      owner: shop.owner
-    });
+      // 1. Check availability for all items
+      for (let orderItem of items) {
+        const menuItem = shop.menuItems.find(item => item.name === orderItem.name);
+        if (!menuItem) {
+          throw new Error(`Menu item '${orderItem.name}' not found.`);
+        }
 
-    res.status(201).json(order);
+        const availableQty = menuItem[quantityField];
+        if (availableQty < orderItem.qty) {
+          throw new Error(`Insufficient quantity for '${orderItem.name}'. Available: ${availableQty}, Requested: ${orderItem.qty}`);
+        }
+      }
+
+      // 2. Reduce quantities
+      for (let orderItem of items) {
+        const menuItemIndex = shop.menuItems.findIndex(item => item.name === orderItem.name);
+        shop.menuItems[menuItemIndex][quantityField] -= orderItem.qty;
+      }
+
+      // Save shop with reduced quantities
+      await shop.save({ session });
+
+      // 3. Create order
+      const itemsWithStatus = items.map(item => ({ ...item, status: 'pending' }));
+      const total = items.reduce((sum, item) => sum + (item.price * item.qty), 0);
+      const slotTime = TIME_SLOT_MAPPING[timeSlot];
+
+      const order = await Order.create([{
+        user: req.user._id,
+        shop: shopId,
+        items: itemsWithStatus,
+        total,
+        location,
+        timeSlot,
+        slotTime,
+        owner: shop.owner
+      }], { session });
+
+      // Commit transaction
+      await session.commitTransaction();
+      session.endSession();
+
+      res.status(201).json({ 
+        message: 'Order placed successfully! Quantities updated.',
+        order: order[0] 
+      });
+
+    } catch (error) {
+      // Rollback transaction on error
+      await session.abortTransaction();
+      session.endSession();
+      throw error;
+    }
+
   } catch (err) {
     console.error(err);
-    res.status(500).json({ msg: 'Server error.' });
+    res.status(500).json({ msg: err.message || 'Server error.' });
   }
 };
 
-// 2. User: Get my orders
+// Rest of the controller methods remain the same...
 exports.getMyOrders = async (req, res) => {
   try {
     if (req.user.role !== 'user') return res.status(403).json({ msg: 'Only users can view their orders.' });
@@ -58,7 +114,6 @@ exports.getMyOrders = async (req, res) => {
   }
 };
 
-// 3. Owner: Get shop orders
 exports.getOwnerOrders = async (req, res) => {
   try {
     if (req.user.role !== 'owner') return res.status(403).json({ msg: 'Only owners can view orders.' });
@@ -71,7 +126,7 @@ exports.getOwnerOrders = async (req, res) => {
       isArchived: false,
       createdAt: { $gte: startOfToday }
     })
-      .populate('user', 'name email phone') // Updated: Added 'phone' to populate
+      .populate('user', 'name email phone')
       .populate('shop', 'shopName')
       .sort({ createdAt: -1 });
 
@@ -82,7 +137,6 @@ exports.getOwnerOrders = async (req, res) => {
   }
 };
 
-// 4. Owner: Update order status
 exports.updateOrderStatus = async (req, res) => {
   try {
     if (req.user.role !== 'owner') return res.status(403).json({ msg: 'Only owners can update orders.' });
@@ -100,7 +154,6 @@ exports.updateOrderStatus = async (req, res) => {
   }
 };
 
-// 5. User: Delete old order
 exports.deleteOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
@@ -121,7 +174,6 @@ exports.deleteOrder = async (req, res) => {
   }
 };
 
-// 6. User: Cancel pending order
 exports.cancelOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);

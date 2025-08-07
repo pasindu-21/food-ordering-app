@@ -6,15 +6,17 @@ import {
   Container, Grid, Card, CardMedia, CardContent, CardActions, Typography,
   Button, Box, List, ListItem, ListItemText, Dialog, DialogTitle,
   DialogContent, IconButton, DialogActions, Paper, Skeleton, InputBase,
-  Rating, TextField, Divider, Snackbar, Alert, CircularProgress
+  Rating, TextField, Divider, Snackbar, Alert, CircularProgress, Avatar
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import ExpandLess from '@mui/icons-material/ExpandLess';
-
 import StarIcon from '@mui/icons-material/Star';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import PersonIcon from '@mui/icons-material/Person';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
@@ -45,6 +47,9 @@ const UserShopList = () => {
 
   // Edit review dialog state
   const [editReviewDialog, setEditReviewDialog] = useState({ open: false, reviewId: null, shopId: null, initialRating: 0, initialComment: '' });
+
+  // Delete confirmation dialog state
+  const [deleteConfirmDialog, setDeleteConfirmDialog] = useState({ open: false, reviewId: null, shopId: null });
 
   useEffect(() => {
     setLoading(true);
@@ -94,33 +99,34 @@ const UserShopList = () => {
 
   const handleSubmitReview = async () => {
     if (rating === 0) {
-      setReviewSnackbar({ open: true, message: 'කරුණාකර rating එකක් තෝරන්න', severity: 'error' });
+      setReviewSnackbar({ open: true, message: 'Please select a rating', severity: 'error' });
       return;
     }
     if (comment.trim() === '') {
-      setReviewSnackbar({ open: true, message: 'Comment එක empty වෙන්න බෑ', severity: 'error' });
+      setReviewSnackbar({ open: true, message: 'Comment cannot be empty', severity: 'error' });
+      return;
+    }
+    if (comment.trim().length < 10) {
+      setReviewSnackbar({ open: true, message: 'Comment must be at least 10 characters', severity: 'error' });
       return;
     }
     setReviewSubmitting(true);
     const token = sessionStorage.getItem('token');
     try {
       await axios.post('http://localhost:5000/api/reviews', { shopId: reviewDialog.shopId, rating, comment }, { headers: { Authorization: `Bearer ${token}` } });
-      setReviewSnackbar({ open: true, message: 'Review submit වුණා!', severity: 'success' });
+      setReviewSnackbar({ open: true, message: 'Review submitted successfully!', severity: 'success' });
       setReviewDialog({ open: false });
       setRating(0);
       setComment('');
       fetchReviews(reviewDialog.shopId);
     } catch (err) {
-      setReviewSnackbar({ open: true, message: 'Review submit කරන්න බැරි වුණා. ආයෙත් try කරන්න.', severity: 'error' });
+      setReviewSnackbar({ open: true, message: 'Failed to submit review. Please try again.', severity: 'error' });
     } finally {
       setReviewSubmitting(false);
     }
   };
 
   const handleOpenEditReview = (review) => {
-    console.log('Opening edit for review ID:', review._id);
-    console.log('Review user ID:', review.user?._id);
-    console.log('Stored user ID:', sessionStorage.getItem('userId'));
     setEditReviewDialog({
       open: true,
       reviewId: review._id,
@@ -134,11 +140,15 @@ const UserShopList = () => {
 
   const handleSubmitEditReview = async () => {
     if (rating === 0) {
-      setReviewSnackbar({ open: true, message: 'කරුණාකර rating එකක් තෝරන්න', severity: 'error' });
+      setReviewSnackbar({ open: true, message: 'Please select a rating', severity: 'error' });
       return;
     }
     if (comment.trim() === '') {
-      setReviewSnackbar({ open: true, message: 'Comment එක empty වෙන්න බෑ', severity: 'error' });
+      setReviewSnackbar({ open: true, message: 'Comment cannot be empty', severity: 'error' });
+      return;
+    }
+    if (comment.trim().length < 10) {
+      setReviewSnackbar({ open: true, message: 'Comment must be at least 10 characters', severity: 'error' });
       return;
     }
     setReviewSubmitting(true);
@@ -158,12 +168,13 @@ const UserShopList = () => {
     }
   };
 
-  const handleDeleteReview = async (shopId, reviewId) => {
+  const handleDeleteReview = async () => {
     const token = sessionStorage.getItem('token');
     try {
-      await axios.delete(`http://localhost:5000/api/reviews/${reviewId}`, { headers: { Authorization: `Bearer ${token}` } });
-      setReviewSnackbar({ open: true, message: 'Review deleted!', severity: 'success' });
-      fetchReviews(shopId);
+      await axios.delete(`http://localhost:5000/api/reviews/${deleteConfirmDialog.reviewId}`, { headers: { Authorization: `Bearer ${token}` } });
+      setReviewSnackbar({ open: true, message: 'Review deleted successfully!', severity: 'success' });
+      setDeleteConfirmDialog({ open: false, reviewId: null, shopId: null });
+      fetchReviews(deleteConfirmDialog.shopId);
     } catch (err) {
       console.error('Delete review error:', err);
       setReviewSnackbar({ open: true, message: 'Failed to delete review', severity: 'error' });
@@ -178,6 +189,27 @@ const UserShopList = () => {
     setReviewsPopup({ open: false, shopId: null, shopName: '' });
   };
 
+  // Format date helper
+  const formatDate = (dateString) => {
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return 'Recently';
+    }
+  };
+
+  // Generate user avatar
+  const generateAvatar = (name) => {
+    if (!name) return '?';
+    return name.charAt(0).toUpperCase();
+  };
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Box textAlign="center" mb={4}>
@@ -185,7 +217,7 @@ const UserShopList = () => {
           <StorefrontIcon fontSize="large" sx={{ mr: 1 }} />
           Available Shops
         </Typography>
-        <Typography color="text.secondary" mt={1}fontSize="large">
+        <Typography color="text.secondary" mt={1} fontSize="large">
           Choose a shop to view menu and place your order.
         </Typography>
         <Paper
@@ -265,7 +297,6 @@ const UserShopList = () => {
                       {shop.location ? `Location: ${shop.location}` : ''}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" gutterBottom display="flex" alignItems="center">
-                      
                       Mobile No: {shop.phone || 'N/A'}
                     </Typography>
                     
@@ -279,27 +310,31 @@ const UserShopList = () => {
                         )}
                       </Box>
                       <List dense sx={{ bgcolor: theme.palette.action.hover, borderRadius: 2, px: 1, py: 0.5, maxHeight: 120, overflow: 'auto' }}>
-                        {(shop.menuItems && shop.menuItems.length > 0
-                          ? expandedShopId === shop._id
-                            ? shop.menuItems
-                            : shop.menuItems.slice(0, 3)
-                          : []
-                        ).map(item => (
-                          <ListItem key={item._id} sx={{ py: 0 }}>
-                            <ListItemText
-                              primary={
-                                <Typography variant="body2" fontWeight={500}>
-                                  {item.name} <span style={{ color: theme.palette.text.secondary }}>- Rs.{item.price}</span>
-                                </Typography>
-                              }
-                              secondary={
-                                <Typography variant="caption" color="text.secondary">
-                                  (B:{item.breakfastQty}, L:{item.lunchQty}, D:{item.dinnerQty})
-                                </Typography>
-                              }
-                            />
-                          </ListItem>
-                        ))}
+                        
+{(shop.menuItems && shop.menuItems.length > 0
+  ? expandedShopId === shop._id
+    ? shop.menuItems
+    : shop.menuItems.slice(0, 3)
+  : []
+).map(item => (
+  <ListItem key={item._id} sx={{ py: 0 }}>
+    <ListItemText
+      primary={
+        <Typography variant="body2" fontWeight={500}>
+          {item.name} <span style={{ color: theme.palette.text.secondary }}>- Rs.{item.price}</span>
+        </Typography>
+      }
+      secondary={
+        <Box component="span" display="flex" flexDirection="column">
+          <Typography variant="caption" color="primary.main" fontWeight="bold">
+            Available: (B:{item.availableBreakfastQty || 0}, L:{item.availableLunchQty || 0}, D:{item.availableDinnerQty || 0})
+          </Typography>
+        </Box>
+      }
+    />
+  </ListItem>
+))}
+
                       </List>
                       {shop.menuItems && shop.menuItems.length === 0 && (
                         <Typography variant="body2" color="text.secondary">
@@ -322,10 +357,9 @@ const UserShopList = () => {
                         {data.averageRating} / 5
                       </Typography>
                     </Box>
-                    <CardActions sx={{ mt: 'auto', p: isMobile ? 1 : 2 }}>
+                     <CardActions sx={{ mt: 'auto', p: isMobile ? 1 : 2 }}>
                     <Button
                       fullWidth
-                      height
                       variant="contained"
                       size={isMobile ? "medium" : "large"}
                       sx={{
@@ -339,7 +373,7 @@ const UserShopList = () => {
                     </Button>
                   </CardActions>
                   </CardContent>
-                  
+                 
                 </Card>
               </Grid>
             );
@@ -381,125 +415,272 @@ const UserShopList = () => {
       </Dialog>
 
       {/* Add Review Dialog */}
-      <Dialog open={reviewDialog.open} onClose={() => setReviewDialog({ open: false })}>
+      <Dialog open={reviewDialog.open} onClose={() => setReviewDialog({ open: false })} maxWidth="sm" fullWidth>
         <DialogTitle>Leave a Review</DialogTitle>
         <DialogContent>
-          <Rating value={rating} onChange={(e, newValue) => setRating(newValue)} precision={0.5} />
+          <Box mb={2}>
+            <Typography variant="subtitle2" gutterBottom>Rating *</Typography>
+            <Rating 
+              value={rating} 
+              onChange={(e, newValue) => setRating(newValue)} 
+              precision={0.5}
+              size="large"
+            />
+          </Box>
           <TextField
-            label="Comment"
+            label="Your Review"
             multiline
             rows={4}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             fullWidth
             margin="normal"
+            placeholder="Share your experience with this shop..."
+            helperText={`${comment.length}/500 characters (minimum 10)`}
+            inputProps={{ maxLength: 500 }}
+            error={comment.length > 0 && comment.length < 10}
           />
           {reviewSubmitting && <CircularProgress size={24} sx={{ mt: 1 }} />}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setReviewDialog({ open: false })}>Cancel</Button>
-          <Button onClick={handleSubmitReview} variant="contained" disabled={reviewSubmitting}>Submit</Button>
+          <Button 
+            onClick={handleSubmitReview} 
+            variant="contained" 
+            disabled={reviewSubmitting || rating === 0 || comment.trim().length < 10}
+          >
+            {reviewSubmitting ? 'Submitting...' : 'Submit Review'}
+          </Button>
         </DialogActions>
       </Dialog>
 
       {/* Edit Review Dialog */}
-      <Dialog open={editReviewDialog.open} onClose={() => setEditReviewDialog({ open: false })}>
+      <Dialog open={editReviewDialog.open} onClose={() => setEditReviewDialog({ open: false })} maxWidth="sm" fullWidth>
         <DialogTitle>Edit Your Review</DialogTitle>
         <DialogContent>
-          <Rating value={rating} onChange={(e, newValue) => setRating(newValue)} precision={0.5} />
+          <Box mb={2}>
+            <Typography variant="subtitle2" gutterBottom>Rating *</Typography>
+            <Rating 
+              value={rating} 
+              onChange={(e, newValue) => setRating(newValue)} 
+              precision={0.5}
+              size="large"
+            />
+          </Box>
           <TextField
-            label="Comment"
+            label="Your Review"
             multiline
             rows={4}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             fullWidth
             margin="normal"
+            placeholder="Share your experience with this shop..."
+            helperText={`${comment.length}/500 characters (minimum 10)`}
+            inputProps={{ maxLength: 500 }}
+            error={comment.length > 0 && comment.length < 10}
           />
           {reviewSubmitting && <CircularProgress size={24} sx={{ mt: 1 }} />}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditReviewDialog({ open: false })}>Cancel</Button>
-          <Button onClick={handleSubmitEditReview} variant="contained" disabled={reviewSubmitting}>Update</Button>
+          <Button 
+            onClick={handleSubmitEditReview} 
+            variant="contained" 
+            disabled={reviewSubmitting || rating === 0 || comment.trim().length < 10}
+          >
+            {reviewSubmitting ? 'Updating...' : 'Update Review'}
+          </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Reviews Popup Dialog */}
-      <Dialog open={reviewsPopup.open} onClose={closeReviewsPopup} maxWidth="md" fullWidth>
-        <DialogTitle>
-          Customer Reviews for {reviewsPopup.shopName}
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteConfirmDialog.open} onClose={() => setDeleteConfirmDialog({ open: false })}>
+        <DialogTitle>Delete Review</DialogTitle>
+        <DialogContent>
+          <Typography>Are you sure you want to delete this review? This action cannot be undone.</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirmDialog({ open: false })}>Cancel</Button>
+          <Button onClick={handleDeleteReview} color="error" variant="contained">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Reviews Popup Dialog - Improved UI */}
+      <Dialog 
+        open={reviewsPopup.open} 
+        onClose={closeReviewsPopup} 
+        maxWidth="md" 
+        fullWidth
+        PaperProps={{
+          sx: { borderRadius: 3 }
+        }}
+      >
+        <DialogTitle sx={{ bgcolor: 'primary.main', color: 'white', display: 'flex', alignItems: 'center' }}>
+          <StarIcon sx={{ mr: 1 }} />
+          Reviews for {reviewsPopup.shopName}
           <IconButton
             aria-label="close"
             onClick={closeReviewsPopup}
-            sx={{ position: 'absolute', right: 8, top: 8, color: (theme) => theme.palette.grey[500] }}
+            sx={{ position: 'absolute', right: 8, top: 8, color: 'white' }}
           >
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent dividers>
+        <DialogContent dividers sx={{ p: 0 }}>
           {(() => {
             const currentReviews = reviewsData[reviewsPopup.shopId]?.reviews || [];
-            console.log('Reviews loaded:', currentReviews);
-            console.log('Logged-in User ID:', sessionStorage.getItem('userId'));
+            const currentUserId = sessionStorage.getItem('userId');
+            
             return currentReviews.length === 0 ? (
-              <Typography color="text.secondary" align="center" sx={{ py: 2 }}>
-                No reviews yet. Be the first!
-              </Typography>
+              <Box sx={{ p: 4, textAlign: 'center' }}>
+                <PersonIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
+                <Typography variant="h6" color="text.secondary" gutterBottom>
+                  No reviews yet
+                </Typography>
+                <Typography color="text.secondary">
+                  Be the first to share your experience!
+                </Typography>
+              </Box>
             ) : (
-              <List sx={{ maxHeight: 400, overflowY: 'auto' }}>
-                {currentReviews.map((review) => {
-                  const isOwnReview = review.user?._id == sessionStorage.getItem('userId');
-                  console.log(`Review ID: ${review._id}, User ID: ${review.user?._id}, Is own: ${isOwnReview}`);
+              <Box sx={{ maxHeight: 500, overflowY: 'auto' }}>
+                {currentReviews.map((review, index) => {
+                  const isOwnReview = review.user?._id === currentUserId;
+                  
                   return (
-                    <ListItem key={review._id} sx={{ py: 1, borderBottom: '1px solid #eee' }}>
-                      <ListItemText
-                        primary={
-                          <Typography variant="body2" fontWeight="bold">
-                            {review.user?.name || 'Anonymous'}
-                          </Typography>
-                        }
-                        secondary={
-                          <span>
-                            <Rating value={review.rating} readOnly size="small" />
-                            <Typography component="span" variant="body2" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                    <Card 
+                      key={review._id} 
+                      variant="outlined" 
+                      sx={{ 
+                        m: 2, 
+                        borderRadius: 2,
+                        border: isOwnReview ? `2px solid ${theme.palette.primary.light}` : undefined,
+                        bgcolor: isOwnReview ? 'primary.50' : 'background.paper'
+                      }}
+                    >
+                      <CardContent>
+                        <Box display="flex" alignItems="flex-start" mb={2}>
+                          <Avatar 
+                            sx={{ 
+                              bgcolor: isOwnReview ? 'primary.main' : 'secondary.main', 
+                              mr: 2 
+                            }}
+                          >
+                            {generateAvatar(review.user?.name)}
+                          </Avatar>
+                          <Box flex={1}>
+                            <Box display="flex" alignItems="center" justifyContent="space-between">
+                              <Typography variant="subtitle1" fontWeight="bold">
+                                {review.user?.name || 'Anonymous'}
+                                {isOwnReview && (
+                                  <Typography component="span" variant="caption" color="primary" sx={{ ml: 1 }}>
+                                    (Your review)
+                                  </Typography>
+                                )}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {formatDate(review.createdAt)}
+                              </Typography>
+                            </Box>
+                            <Rating value={review.rating} readOnly size="small" sx={{ my: 0.5 }} />
+                            <Typography variant="body2" color="text.primary" sx={{ mt: 1 }}>
                               {review.comment}
                             </Typography>
-                            {review.replies?.map((reply, index) => (
-                              <Typography key={index} component="span" variant="body2" color="primary" sx={{ display: 'block', mt: 1, fontStyle: 'italic' }}>
-                                Owner Reply: {reply.comment}
-                              </Typography>
+                            
+                            {/* Owner Replies */}
+                            {review.replies?.map((reply, replyIndex) => (
+                              <Box 
+                                key={replyIndex} 
+                                sx={{ 
+                                  mt: 2, 
+                                  ml: 3, 
+                                  p: 2, 
+                                  bgcolor: 'action.hover', 
+                                  borderRadius: 2,
+                                  borderLeft: `4px solid ${theme.palette.info.main}`
+                                }}
+                              >
+                                <Box display="flex" alignItems="center" mb={1}>
+                                  <Avatar sx={{ bgcolor: 'info.main', width: 24, height: 24, mr: 1, fontSize: '0.875rem' }}>
+                                    {generateAvatar(reply.owner?.name)}
+                                  </Avatar>
+                                  <Typography variant="caption" fontWeight="bold" color="info.main">
+                                    {reply.owner?.name} (Owner)
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto' }}>
+                                    {formatDate(reply.createdAt)}
+                                  </Typography>
+                                </Box>
+                                <Typography variant="body2" color="text.primary">
+                                  {reply.comment}
+                                </Typography>
+                              </Box>
                             )) || null}
-                          </span>
-                        }
-                      />
-                      {isOwnReview && (
-                        <>
-                          <Button size="small" color="primary" onClick={() => handleOpenEditReview(review)} sx={{ mt: 1, ml: 1 }}>
-                            Edit
-                          </Button>
-                          <Button size="small" color="error" onClick={() => handleDeleteReview(reviewsPopup.shopId, review._id)} sx={{ mt: 1, ml: 1 }}>
-                            Delete
-                          </Button>
-                        </>
-                      )}
-                    </ListItem>
+                          </Box>
+                        </Box>
+                        
+                        {isOwnReview && (
+                          <Box display="flex" justifyContent="flex-end" gap={1}>
+                            <Button 
+                              size="small" 
+                              startIcon={<EditIcon />}
+                              onClick={() => handleOpenEditReview(review)}
+                              sx={{ textTransform: 'none' }}
+                            >
+                              Edit
+                            </Button>
+                            <Button 
+                              size="small" 
+                              color="error"
+                              startIcon={<DeleteIcon />}
+                              onClick={() => setDeleteConfirmDialog({ 
+                                open: true, 
+                                reviewId: review._id, 
+                                shopId: reviewsPopup.shopId 
+                              })}
+                              sx={{ textTransform: 'none' }}
+                            >
+                              Delete
+                            </Button>
+                          </Box>
+                        )}
+                      </CardContent>
+                    </Card>
                   );
                 })}
-              </List>
+              </Box>
             );
           })()}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => handleOpenReview(reviewsPopup.shopId)} variant="outlined" color="primary">
-            Add Review
+        <DialogActions sx={{ p: 2, bgcolor: 'action.hover' }}>
+          <Button 
+            onClick={() => handleOpenReview(reviewsPopup.shopId)} 
+            variant="contained"
+            startIcon={<StarIcon />}
+            sx={{ borderRadius: 2 }}
+          >
+            Write a Review
           </Button>
-          <Button onClick={closeReviewsPopup}>Close</Button>
+          <Button onClick={closeReviewsPopup} sx={{ borderRadius: 2 }}>
+            Close
+          </Button>
         </DialogActions>
       </Dialog>
 
       {/* Snackbar for review feedback */}
-      <Snackbar open={reviewSnackbar.open} autoHideDuration={6000} onClose={() => setReviewSnackbar({ ...reviewSnackbar, open: false })}>
-        <Alert onClose={() => setReviewSnackbar({ ...reviewSnackbar, open: false })} severity={reviewSnackbar.severity} sx={{ width: '100%' }}>
+      <Snackbar 
+        open={reviewSnackbar.open} 
+        autoHideDuration={6000} 
+        onClose={() => setReviewSnackbar({ ...reviewSnackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setReviewSnackbar({ ...reviewSnackbar, open: false })} 
+          severity={reviewSnackbar.severity} 
+          sx={{ width: '100%', borderRadius: 2 }}
+        >
           {reviewSnackbar.message}
         </Alert>
       </Snackbar>

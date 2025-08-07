@@ -74,7 +74,7 @@ const AddShop = () => {
       }, {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
       });
-      setAlert({ type: 'success', message: 'Shop එක සාර්ථකව ඇතුළත් විය!' });
+      setAlert({ type: 'success', message: 'Shop successfuly Create!' });
       setActiveStep(2);
     } catch (err) {
       setAlert({ type: 'error', message: err.response?.data?.msg || 'Failed to add shop.' });

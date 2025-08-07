@@ -10,25 +10,35 @@ import {
   Paper,
   TextField,
   Snackbar,
-  Alert
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  Avatar
 } from '@mui/material';
-import { Fastfood, ListAlt } from '@mui/icons-material';
+import { Fastfood, ListAlt, AccountCircle } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext'; // Import useAuth (updated from AuthContext)
+import { useAuth } from '../context/AuthContext';
 
+// Styled components
 const StyledCard = styled(Card)(({ theme }) => ({
   padding: theme.spacing(4),
-  marginTop: theme.spacing(8),
+  marginTop: theme.spacing(4),
+  marginBottom: theme.spacing(4),
   borderRadius: 16,
   boxShadow: theme.shadows[10],
   transition: 'transform 0.3s',
+  minHeight: '70vh',
+  display: 'flex',
+  flexDirection: 'column',
   '&:hover': {
     transform: 'translateY(-5px)'
   },
-  // DARK MODE: use a dark gradient, otherwise use your old gradient
   background:
     theme.palette.mode === 'dark'
       ? 'linear-gradient(145deg, #232323, #111418 90%)'
@@ -47,10 +57,21 @@ const ActionButton = styled(Button)(({ theme }) => ({
   }
 }));
 
-// Updated UserProfile component with fetching from DB
-const UserProfile = () => {
+const FooterSection = styled(Box)(({ theme }) => ({
+  marginTop: 'auto',
+  textAlign: 'center',
+  padding: theme.spacing(2),
+  borderTop: `1px solid ${theme.palette.divider}`,
+  backgroundColor: theme.palette.mode === 'dark' 
+    ? 'rgba(255, 255, 255, 0.02)' 
+    : 'rgba(0, 0, 0, 0.02)',
+  borderRadius: '0 0 16px 16px'
+}));
+
+// UserProfile as a functional component for the dialog content
+const UserProfileForm = ({ onClose }) => {
   const theme = useTheme();
-  const { user, updateUser } = useAuth(); // Use global context
+  const { user, updateUser } = useAuth();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(true);
@@ -64,7 +85,6 @@ const UserProfile = () => {
       setLoading(false);
     } else {
       setLoading(true);
-      // Fetch if not available
       fetchUser();
     }
   }, [user]);
@@ -75,7 +95,7 @@ const UserProfile = () => {
       const res = await axios.get('http://localhost:5000/api/users/profile', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      updateUser(res.data); // Update global context
+      updateUser(res.data);
     } catch (error) {
       setSnackbar({ open: true, message: 'Failed to load profile from database', severity: 'error' });
     } finally {
@@ -94,9 +114,10 @@ const UserProfile = () => {
       const res = await axios.patch('http://localhost:5000/api/users/profile', { name: name.trim(), phone: phone.trim() }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      updateUser(res.data); // Update global context
+      updateUser(res.data);
       setSnackbar({ open: true, message: 'Profile updated successfully', severity: 'success' });
       setEditMode(false);
+      onClose(); // Close dialog after save
     } catch (error) {
       setSnackbar({ open: true, message: 'Failed to update profile', severity: 'error' });
     } finally {
@@ -113,11 +134,10 @@ const UserProfile = () => {
   }
 
   return (
-    <Paper elevation={3} sx={{ p: 3, borderRadius: 4, mt: 4, bgcolor: theme.palette.background.paper, maxWidth: 400, mx: 'auto' }}>
-      <Typography variant="h5" gutterBottom>My Profile</Typography>
+    <>
       <TextField
         label="Name"
-        value={name || ''} // Fix: fallback to empty string
+        value={name || ''}
         onChange={e => setName(e.target.value)}
         fullWidth
         margin="normal"
@@ -125,14 +145,14 @@ const UserProfile = () => {
       />
       <TextField
         label="Email"
-        value={user.email || ''} // Fix: fallback to empty string
+        value={user.email || ''}
         fullWidth
         margin="normal"
         disabled
       />
       <TextField
         label="Phone Number"
-        value={phone || ''} // Fix: fallback to empty string
+        value={phone || ''}
         onChange={e => setPhone(e.target.value)}
         fullWidth
         margin="normal"
@@ -159,80 +179,168 @@ const UserProfile = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </Paper>
+    </>
   );
 };
 
+// Main UserHome component
 const UserHome = () => {
   const navigate = useNavigate();
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+
+  const openProfileDialog = () => setProfileDialogOpen(true);
+  const closeProfileDialog = () => setProfileDialogOpen(false);
 
   return (
-    <Container maxWidth="md">
-      <StyledCard>
-        <CardContent>
-          <Box textAlign="center" mb={4}>
-            <Typography
-              variant="h3"
-              component="h1"
-              gutterBottom
-              color="primary.main"
-              sx={{
-                fontWeight: 700,
-                textShadow: '2px 2px 4px rgba(0,0,0,0.1)'
-              }}
-            >
-              Welcome to UniFood 
-            </Typography>
-
-            <Typography
-              variant="h6"
-              color="text.secondary"
-              sx={{ mb: 4 }}
-            >
-              Discover delicious meals from your favorite local restaurants
-            </Typography>
-
-            <Grid container spacing={3} justifyContent="center">
-              <Grid item xs={12} sm={6} md={5}>
-                <ActionButton
-                  fullWidth
-                  variant="contained"
-                  color="primary"
-                  startIcon={<Fastfood sx={{ fontSize: 30 }} />}
-                  onClick={() => navigate('/shops')}
-                  sx={{ py: 2 }}
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <Container maxWidth="md" sx={{ flex: 1, display: 'flex', flexDirection: 'column', py: 2 }}>
+        <StyledCard>
+          <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            {/* Main Content Area */}
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              {/* Header Section with Profile Icon */}
+              <Box textAlign="center" mb={4} position="relative">
+                <IconButton
+                  onClick={openProfileDialog}
+                  sx={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    color: 'primary.main',
+                    bgcolor: 'background.paper',
+                    boxShadow: 2,
+                    '&:hover': {
+                      bgcolor: 'primary.light',
+                      color: 'white'
+                    }
+                  }}
                 >
-                  View Available Shops
-                </ActionButton>
-              </Grid>
-              <Grid item xs={12} sm={6} md={5}>
-                <ActionButton
-                  fullWidth
-                  variant="outlined"
-                  color="secondary"
-                  startIcon={<ListAlt sx={{ fontSize: 30 }} />}
-                  onClick={() => navigate('/my-orders')}
-                  sx={{ py: 2 }}
+                  <AccountCircle sx={{ fontSize: 40 }} />
+                </IconButton>
+
+                <Typography
+                  variant="h3"
+                  component="h1"
+                  gutterBottom
+                  color="primary.main"
+                  sx={{
+                    fontWeight: 700,
+                    textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
+                    mb: 2
+                  }}
                 >
-                  View My Orders
-                </ActionButton>
-              </Grid>
-            </Grid>
+                  Welcome to UniFood
+                </Typography>
 
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ mt: 4 }}
-            >
-              Thank You
-            </Typography>
-          </Box>
-        </CardContent>
-      </StyledCard>
+                <Typography
+                  variant="h6"
+                  color="text.secondary"
+                  sx={{ mb: 4, maxWidth: 600, mx: 'auto' }}
+                >
+                  Discover delicious meals from your favorite local restaurants and enjoy convenient food delivery
+                </Typography>
+              </Box>
 
-      {/* Added User Profile section below the main card */}
-      <UserProfile />
-    </Container>
+              {/* Action Buttons Section */}
+              <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Grid container spacing={3} justifyContent="center" sx={{ maxWidth: 600 }}>
+                  <Grid item xs={12} sm={6}>
+                    <ActionButton
+                      fullWidth
+                      variant="contained"
+                      color="primary"
+                      startIcon={<Fastfood sx={{ fontSize: 30 }} />}
+                      onClick={() => navigate('/shops')}
+                      sx={{ 
+                        py: 3,
+                        minHeight: 80,
+                        fontSize: '1.2rem',
+                        fontWeight: 600
+                      }}
+                    >
+                      View Available Shops
+                    </ActionButton>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <ActionButton
+                      fullWidth
+                      variant="outlined"
+                      color="secondary"
+                      startIcon={<ListAlt sx={{ fontSize: 30 }} />}
+                      onClick={() => navigate('/my-orders')}
+                      sx={{ 
+                        py: 3,
+                        minHeight: 80,
+                        fontSize: '1.2rem',
+                        fontWeight: 600,
+                        borderWidth: 2,
+                        '&:hover': {
+                          borderWidth: 2
+                        }
+                      }}
+                    >
+                      View My Orders
+                    </ActionButton>
+                  </Grid>
+                </Grid>
+              </Box>
+            </Box>
+
+            {/* Footer Section */}
+            <FooterSection>
+              <Typography
+                variant="body1"
+                color="text.secondary"
+                sx={{ 
+                  fontWeight: 500,
+                  fontSize: '1.1rem'
+                }}
+              >
+                Thank you for choosing UniFood! 🍽️
+              </Typography>
+              <Typography
+                variant="caption"
+                color="text.disabled"
+                sx={{ 
+                  display: 'block',
+                  mt: 1,
+                  fontSize: '0.85rem'
+                }}
+              >
+                Bringing delicious food to your doorstep
+              </Typography>
+            </FooterSection>
+          </CardContent>
+        </StyledCard>
+      </Container>
+
+      {/* Profile Popup Dialog */}
+      <Dialog
+        open={profileDialogOpen}
+        onClose={closeProfileDialog}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: 10
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          textAlign: 'center',
+          fontWeight: 700,
+          color: 'primary.main',
+          borderBottom: 1,
+          borderColor: 'divider'
+        }}>
+          My Profile
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
+          <UserProfileForm onClose={closeProfileDialog} />
+        </DialogContent>
+      </Dialog>
+    </Box>
   );
 };
 
