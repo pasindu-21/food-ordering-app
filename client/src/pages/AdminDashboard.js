@@ -4,7 +4,7 @@ import {
   Container, Grid, Paper, Typography, Box, CircularProgress, Alert,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   IconButton, Tooltip, Dialog, DialogActions, DialogContent,
-  DialogTitle, Button, TextField, Select, MenuItem, InputLabel, FormControl, Chip, Stack // FIXED: Added Stack
+  DialogTitle, Button, TextField, Select, MenuItem, InputLabel, FormControl, Chip, Stack
 } from '@mui/material';
 import { PieChart, Pie, Legend, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from 'recharts';
 import PeopleIcon from '@mui/icons-material/People';
@@ -13,8 +13,7 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import DeleteIcon from '@mui/icons-material/Delete';
 import BlockIcon from '@mui/icons-material/Block';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import EditIcon from '@mui/icons-material/Edit'; // Added for edit button
-
+import EditIcon from '@mui/icons-material/Edit';
 import { useTheme } from '@mui/material/styles';
 
 // Reusable Components
@@ -59,11 +58,30 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
+// UPDATED: Enhanced RoleChip with role label mapping
 const RoleChip = ({ role }) => {
   let color = 'default';
-  if (role === 'admin') color = 'primary';
-  else if (role === 'owner') color = 'secondary';
-  return <Chip label={role.charAt(0).toUpperCase() + role.slice(1)} color={color} size="small" />;
+  let displayLabel = '';
+  
+  // CHANGED: Role label mapping
+  switch(role) {
+    case 'admin':
+      color = 'primary';
+      displayLabel = 'Admin';
+      break;
+    case 'owner':
+      color = 'secondary';
+      displayLabel = 'Vendor';  // Changed from 'Owner' to 'Vendor'
+      break;
+    case 'user':
+      color = 'info';
+      displayLabel = 'Student';  // Changed from 'User' to 'Student'
+      break;
+    default:
+      displayLabel = role.charAt(0).toUpperCase() + role.slice(1);
+  }
+  
+  return <Chip label={displayLabel} color={color} size="small" />;
 };
 
 const AdminDashboard = () => {
@@ -77,7 +95,7 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [deleteUser, setDeleteUser] = useState(null);
-  const [editUser, setEditUser] = useState(null); // NEW: State for editing user
+  const [editUser, setEditUser] = useState(null);
   const adminName = JSON.parse(sessionStorage.getItem('user'))?.name || 'Admin';
 
   const fetchData = async () => {
@@ -128,8 +146,6 @@ const AdminDashboard = () => {
 
   const handleOpenDelete = (user) => setDeleteUser(user);
   const handleCloseDelete = () => setDeleteUser(null);
-
-  // NEW: Edit User Functions
   const handleOpenEdit = (user) => setEditUser(user);
   const handleCloseEdit = () => setEditUser(null);
 
@@ -153,20 +169,21 @@ const AdminDashboard = () => {
     });
   }, [users, searchTerm, roleFilter]);
 
+  // UPDATED: Chart data with updated role labels
   const chartData = useMemo(() => {
     const roles = { admin: 0, owner: 0, user: 0 };
     users.forEach(user => { if (roles[user.role] !== undefined) { roles[user.role]++; } });
     return [
       { name: 'Admins', value: roles.admin },
-      { name: 'Owners', value: roles.owner },
-      { name: 'Users', value: roles.user }
+      { name: 'Vendors', value: roles.owner },    // Changed from 'Owners' to 'Vendors'
+      { name: 'Students', value: roles.user }     // Changed from 'Users' to 'Students'
     ];
   }, [users]);
 
   // Dynamic chart colors for dark/light mode
   const COLORS = isDark
-    ? ['#90caf9', '#f48fb1', '#80cbc4']  // lighter colors for dark bg
-    : ['#1976d2', '#ed6c02', '#2e7d32']; // original colors for light bg
+    ? ['#90caf9', '#f48fb1', '#80cbc4']
+    : ['#1976d2', '#ed6c02', '#2e7d32'];
 
   if (loading) {
     return <Box display="flex" justifyContent="center" alignItems="center" sx={{ height: '100vh', bgcolor: theme.palette.background.default }}>
@@ -193,9 +210,10 @@ const AdminDashboard = () => {
 
         {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
+        {/* UPDATED: Stats cards with updated labels */}
         <Grid container spacing={3} sx={{ mb: 4, px: { xs: 2, md: 50 } }}>
           <Grid item xs={12} sm={6} md={4}>
-            <StatCard title="Total Users" value={stats?.totalUsers || 0} icon={<PeopleIcon />} color={COLORS[0]} />
+            <StatCard title="Total User" value={stats?.totalUsers || 0} icon={<PeopleIcon />} color={COLORS[0]} />
           </Grid>
           <Grid item xs={12} sm={6} md={4}>
             <StatCard title="Total Shops" value={stats?.totalShops || 0} icon={<StorefrontIcon />} color={COLORS[1]} />
@@ -219,7 +237,10 @@ const AdminDashboard = () => {
                 bgcolor: theme.palette.background.paper,
                 transition: "background 0.3s"
                }}>
-              <Typography variant="h6" gutterBottom fontWeight="bold" color="text.primary">User Management</Typography>
+              {/* UPDATED: Header title */}
+              <Typography variant="h6" gutterBottom fontWeight="bold" color="text.primary">
+                User Management
+              </Typography>
               <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
                 <TextField 
                   label="Search by Name/Email" 
@@ -229,13 +250,14 @@ const AdminDashboard = () => {
                   InputProps={{ sx: { bgcolor: theme.palette.background.default }}}
                   onChange={(e) => setSearchTerm(e.target.value)} 
                 />
+                {/* UPDATED: Role filter with updated options */}
                 <FormControl size="small" sx={{ minWidth: 120 }}>
                   <InputLabel>Role</InputLabel>
                   <Select value={roleFilter} label="Role" onChange={(e) => setRoleFilter(e.target.value)}>
                     <MenuItem value="all">All</MenuItem>
                     <MenuItem value="admin">Admin</MenuItem>
-                    <MenuItem value="owner">Owner</MenuItem>
-                    <MenuItem value="user">User</MenuItem>
+                    <MenuItem value="owner">Vendor</MenuItem>  {/* Changed display text */}
+                    <MenuItem value="user">Student</MenuItem>  {/* Changed display text */}
                   </Select>
                 </FormControl>
               </Box>
@@ -271,7 +293,6 @@ const AdminDashboard = () => {
                               {user.isSuspended ? <CheckCircleIcon color="success" /> : <BlockIcon color="warning" />}
                             </IconButton>
                           </Tooltip>
-                          {/* NEW: Edit Button Added Here */}
                           <Tooltip title="Edit User">
                             <IconButton color="primary" onClick={() => handleOpenEdit(user)}>
                                 <EditIcon />
@@ -302,7 +323,10 @@ const AdminDashboard = () => {
                 bgcolor: theme.palette.background.paper,
                 transition: "background 0.3s"
               }}>
-              <Typography variant="h6" gutterBottom fontWeight="bold" color="text.primary">User Roles Distribution</Typography>
+              {/* UPDATED: Chart title */}
+              <Typography variant="h6" gutterBottom fontWeight="bold" color="text.primary">
+                User Roles Distribution
+              </Typography>
               <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
                 <ResponsiveContainer width="100%" height={350}>
                   <PieChart>
@@ -345,7 +369,7 @@ const AdminDashboard = () => {
         </DialogActions>
       </Dialog>
 
-      {/* NEW: Edit User Dialog Added Here */}
+      {/* UPDATED: Edit User Dialog with updated role options */}
       <Dialog open={!!editUser} onClose={handleCloseEdit} PaperProps={{ sx: { bgcolor: theme.palette.background.paper } }}>
         <DialogTitle>Edit User: {editUser?.name}</DialogTitle>
         <DialogContent>
@@ -364,6 +388,7 @@ const AdminDashboard = () => {
               fullWidth
               required
             />
+            {/* UPDATED: Role dropdown with updated display labels */}
             <FormControl fullWidth>
               <InputLabel>Role</InputLabel>
               <Select
@@ -372,8 +397,8 @@ const AdminDashboard = () => {
                 onChange={(e) => setEditUser({ ...editUser, role: e.target.value })}
               >
                 <MenuItem value="admin">Admin</MenuItem>
-                <MenuItem value="owner">Owner</MenuItem>
-                <MenuItem value="user">User</MenuItem>
+                <MenuItem value="owner">Vendor</MenuItem>   {/* Changed display text */}
+                <MenuItem value="user">Student</MenuItem>   {/* Changed display text */}
               </Select>
             </FormControl>
           </Stack>
@@ -383,7 +408,6 @@ const AdminDashboard = () => {
           <Button onClick={handleSaveEdit} color="primary" variant="contained">Save Changes</Button>
         </DialogActions>
       </Dialog>
-
     </Box>
   );
 };

@@ -20,7 +20,7 @@ router.post('/',
     }
     const { shopId, rating, comment } = req.body;
     try {
-      if(!mongoose.Types.ObjectId.isValid(shopId)) {
+      if (!mongoose.Types.ObjectId.isValid(shopId)) {
         return res.status(400).json({ message: 'Invalid Shop ID' });
       }
       const shop = await Shop.findById(shopId);
@@ -31,6 +31,7 @@ router.post('/',
       await review.save();
       return res.status(201).json(review);
     } catch (err) {
+      console.error('Error submitting review:', err);
       return res.status(500).json({ message: err.message });
     }
   });
@@ -55,7 +56,9 @@ router.put('/:reviewId',
       if (!review) {
         return res.status(404).json({ message: 'Review not found' });
       }
+      // Check if the authenticated user owns this review
       if (review.user.toString() !== req.user._id.toString()) {
+        console.log(`Unauthorized edit attempt: User ${req.user._id} trying to edit review ${reviewId} owned by ${review.user}`);
         return res.status(403).json({ message: 'Not authorized to edit this review' });
       }
       review.rating = rating;
@@ -63,6 +66,7 @@ router.put('/:reviewId',
       await review.save();
       return res.json(review);
     } catch (err) {
+      console.error('Error updating review:', err);
       return res.status(500).json({ message: err.message });
     }
   });
@@ -71,7 +75,7 @@ router.put('/:reviewId',
 router.get('/shop/:shopId', async (req, res) => {
   const { shopId } = req.params;
   try {
-    if(!mongoose.Types.ObjectId.isValid(shopId)) {
+    if (!mongoose.Types.ObjectId.isValid(shopId)) {
       return res.status(400).json({ message: 'Invalid Shop ID' });
     }
     const reviews = await Review.find({ shop: shopId })
@@ -82,6 +86,7 @@ router.get('/shop/:shopId', async (req, res) => {
       : 0;
     return res.json({ reviews, averageRating });
   } catch (err) {
+    console.error('Error fetching reviews:', err);
     return res.status(500).json({ message: err.message });
   }
 });
@@ -117,6 +122,7 @@ router.post('/:reviewId/reply',
       const populatedReview = await Review.findById(reviewId).populate('replies.owner', 'name');
       return res.json(populatedReview);
     } catch (err) {
+      console.error('Error adding reply:', err);
       return res.status(500).json({ message: err.message });
     }
   });
@@ -152,6 +158,7 @@ router.put('/:reviewId/reply/:replyId',
       const populatedReview = await Review.findById(reviewId).populate('replies.owner', 'name');
       return res.json(populatedReview);
     } catch (err) {
+      console.error('Error updating reply:', err);
       return res.status(500).json({ message: err.message });
     }
   });
@@ -180,11 +187,12 @@ router.delete('/:reviewId/reply/:replyId',
       await review.save();
       return res.json({ message: 'Reply deleted' });
     } catch (err) {
+      console.error('Error deleting reply:', err);
       return res.status(500).json({ message: err.message });
     }
   });
 
-// Delete a review: DELETE /reviews/:reviewId
+// Delete a review (user deletes own review): DELETE /reviews/:reviewId
 router.delete('/:reviewId',
   auth,
   async (req, res) => {
@@ -197,17 +205,15 @@ router.delete('/:reviewId',
       if (!review) {
         return res.status(404).json({ message: 'Review not found' });
       }
-      const shop = await Shop.findById(review.shop);
-      if (!shop) {
-        return res.status(404).json({ message: 'Shop not found' });
-      }
-      // Allow owner or the review's user to delete
-      if (shop.owner.toString() !== req.user._id.toString() && review.user.toString() !== req.user._id.toString()) {
+      // Only allow the review's user to delete
+      if (review.user.toString() !== req.user._id.toString()) {
+        console.log(`Unauthorized delete attempt: User ${req.user._id} trying to delete review ${reviewId} owned by ${review.user}`);
         return res.status(403).json({ message: 'Not authorized to delete this review' });
       }
       await Review.deleteOne({ _id: reviewId });
       return res.json({ message: 'Review deleted' });
     } catch (err) {
+      console.error('Error deleting review:', err);
       return res.status(500).json({ message: err.message });
     }
   });

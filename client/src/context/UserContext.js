@@ -26,7 +26,7 @@ export const UserProvider = ({ children }) => {
     }
   }, []); // Run once on mount
 
-  // New: Sync userId whenever user changes
+  // Sync userId whenever user changes
   useEffect(() => {
     if (user?._id && !sessionStorage.getItem('userId')) {
       sessionStorage.setItem('userId', user._id);
@@ -43,7 +43,7 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  // New: Logout function to clear state and storage
+  // Logout function to clear state and storage
   const logout = () => {
     setUser(null);
     sessionStorage.removeItem('user');

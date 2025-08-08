@@ -44,7 +44,7 @@ export default function ColorModeProvider({ children }) {
                   paper: "#fff",
                 },
                 primary: {
-                  main: "#1976d2",
+                  main: "#262f2fff",
                 },
               }),
         },
