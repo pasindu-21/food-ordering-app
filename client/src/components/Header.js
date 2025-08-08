@@ -15,7 +15,6 @@ import {
   useTheme
 } from '@mui/material';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import Brightness7Icon from '@mui/icons-material/Brightness7';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import NightsStayIcon from '@mui/icons-material/NightsStay';
@@ -28,7 +27,7 @@ const Header = () => {
   const { mode, toggleColorMode } = useColorMode();
   const { user, logout } = useContext(UserContext);
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md')); // md breakpoint use කරන්න
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isAuthPage = location.pathname === '/auth';
@@ -44,7 +43,7 @@ const Header = () => {
   const handleLogout = () => {
     logout();
     navigate('/');
-    setMobileMenuOpen(false); // Close mobile menu after logout
+    setMobileMenuOpen(false);
   };
 
   const getNavigationItems = () => {
@@ -181,24 +180,45 @@ const Header = () => {
     <>
       <AppBar position="static" color="primary" elevation={2}>
         <Toolbar sx={{ minHeight: { xs: 56, sm: 64 } }}>
-          <Typography
-            variant="h6"
+          {/* 🎯 Logo + Text Combination */}
+          <Box 
             sx={{ 
-              fontWeight: 700, 
+              display: 'flex', 
+              alignItems: 'center', 
               cursor: 'pointer', 
               flexGrow: 1,
-              fontSize: { xs: '1.1rem', sm: '1.25rem' } // Responsive font size
+              gap: { xs: 1, sm: 1.5 }
             }}
             onClick={handleLogoClick}
           >
-            FoodHub
-          </Typography>
+            {/* Logo Image */}
+            <img 
+              src="/logo.jpg" 
+              alt="Uni Food Logo"
+              style={{
+                height: isMobile ? '32px' : '40px', // Responsive height
+                width: 'auto',
+                borderRadius: '8px', // Rounded corners
+                objectFit: 'contain'
+              }}
+            />
+            
+            {/* Company Name */}
+            <Typography
+              variant="h6"
+              sx={{ 
+                fontWeight: 700,
+                fontSize: { xs: '1.1rem', sm: '1.25rem' },
+                color: 'inherit'
+              }}
+            >
+              Uni Food
+            </Typography>
+          </Box>
           
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            {/* Desktop Navigation */}
             {renderDesktopButtons()}
             
-            {/* Mobile Menu Button */}
             {isMobile && !isAuthPage && navigationItems.length > 0 && (
               <IconButton 
                 color="inherit" 
@@ -209,17 +229,15 @@ const Header = () => {
               </IconButton>
             )}
             
-            {/* Dark Mode Toggle - Always visible */}
             <Tooltip title={mode === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}>
               <IconButton color="inherit" onClick={toggleColorMode}>
-                {mode === "dark" ? <NightsStayIcon /> : <NightsStayIcon />}
+                <NightsStayIcon />
               </IconButton>
             </Tooltip>
           </Box>
         </Toolbar>
       </AppBar>
       
-      {/* Mobile Drawer */}
       {isMobile && renderMobileDrawer()}
     </>
   );

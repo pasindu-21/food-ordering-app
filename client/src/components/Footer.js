@@ -26,8 +26,8 @@ const Footer = () => {
       component="footer"
       sx={{
         width: '100%',
-        bgcolor: isDark ? '#494949ff' : '#d5d5d5ff',
-        color: isDark ? '#fcf5f5' : '#555',
+        bgcolor: isDark ? '#494949ff' : '#ffffffff',
+        color: isDark ? '#fcf5f5' : '#091ceaff',
         pt: { xs: 2, sm: 3 }, // Responsive padding top
         pb: { xs: 1, sm: 2 }, // Responsive padding bottom
         px: { xs: 1, sm: 2 }, // Responsive horizontal padding
@@ -81,28 +81,6 @@ const Footer = () => {
           </Link>
           {!isMobile && (
             <>
-              <Link 
-                href="/terms" 
-                underline="hover" 
-                color="inherit" 
-                sx={{ 
-                  fontSize: { xs: 12, sm: 13, md: 14 },
-                  '&:hover': { color: theme.palette.primary.main }
-                }}
-              >
-                Terms of Service
-              </Link>
-              <Link 
-                href="/help" 
-                underline="hover" 
-                color="inherit" 
-                sx={{ 
-                  fontSize: { xs: 12, sm: 13, md: 14 },
-                  '&:hover': { color: theme.palette.primary.main }
-                }}
-              >
-                Help
-              </Link>
             </>
           )}
         </Stack>
@@ -171,11 +149,11 @@ const Footer = () => {
           variant="caption" 
           sx={{ 
             fontSize: { xs: 11, sm: 12, md: 13 }, 
-            color: isDark ? '#fcf5f5' : '#777',
+            color: isDark ? '#f4f4f4ff' : '#0d6477ff',
             opacity: 0.8
           }}
         >
-          © {new Date().getFullYear()} FoodHub. All rights reserved. | Made with ❤️ in Sri Lanka
+          © {new Date().getFullYear()} Uni Food. All rights reserved. | Made with ❤️ in Sri Lanka
         </Typography>
       </Container>
     </Box>

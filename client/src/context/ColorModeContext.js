@@ -35,13 +35,13 @@ export default function ColorModeProvider({ children }) {
                   paper: "#232323",
                 },
                 primary: {
-                  main: "#90caf9",
+                  main: "#d2dfeaff",
                 },
               }
             : {
                 background: {
-                  default: "#f4f6f8",
-                  paper: "#fff",
+                  default: "#d9e0e7ff",
+                  paper: "#d5eef3ff",
                 },
                 primary: {
                   main: "#262f2fff",
