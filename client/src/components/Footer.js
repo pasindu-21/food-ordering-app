@@ -8,6 +8,7 @@ import {
   Divider,
   useTheme,
   useMediaQuery,
+  Container,
 } from '@mui/material';
 
 import FacebookIcon from '@mui/icons-material/Facebook';
@@ -18,6 +19,7 @@ const Footer = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
   return (
     <Box
@@ -26,66 +28,156 @@ const Footer = () => {
         width: '100%',
         bgcolor: isDark ? '#494949ff' : '#d5d5d5ff',
         color: isDark ? '#fcf5f5' : '#555',
-        pt: 2,
-        pb: 1,
-        px: 2,
+        pt: { xs: 2, sm: 3 }, // Responsive padding top
+        pb: { xs: 1, sm: 2 }, // Responsive padding bottom
+        px: { xs: 1, sm: 2 }, // Responsive horizontal padding
         textAlign: 'center',
         borderTop: `1px solid ${isDark ? '#333' : '#ddd'}`,
+        mt: 'auto', // Push to bottom
       }}
     >
-      <Stack
-        direction={isMobile ? 'column' : 'row'}
-        spacing={2}
-        alignItems="center"
-        justifyContent="center"
-        sx={{ mb: 1 }}
-      >
-        <Link href="/privacy" underline="hover" color="inherit" sx={{ fontSize: 13 }}>
-          Privacy
-        </Link>
-        <Link href="/about" underline="hover" color="inherit" sx={{ fontSize: 13 }}>
-          About Us
-        </Link>
-        <Link href="/contact" underline="hover" color="inherit" sx={{ fontSize: 13 }}>
-          Contact
-        </Link>
-      </Stack>
-
-      <Stack direction="row" justifyContent="center" spacing={1}>
-        <IconButton
-          size="small"
-          href="https://facebook.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          sx={{ color: isDark ? '#888' : '#333', '&:hover': { color: theme.palette.primary.main } }}
+      <Container maxWidth="lg">
+        {/* Navigation Links */}
+        <Stack
+          direction={isMobile ? 'column' : 'row'}
+          spacing={isMobile ? 1 : 3}
+          alignItems="center"
+          justifyContent="center"
+          sx={{ mb: 2 }}
+          flexWrap="wrap"
         >
-          <FacebookIcon fontSize="small" />
-        </IconButton>
-        <IconButton
-          size="small"
-          href="https://instagram.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          sx={{ color: isDark ? '#888' : '#333', '&:hover': { color: theme.palette.primary.main } }}
-        >
-          <InstagramIcon fontSize="small" />
-        </IconButton>
-        <IconButton
-          size="small"
-          href="https://twitter.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          sx={{ color: isDark ? '#888' : '#333', '&:hover': { color: theme.palette.primary.main } }}
-        >
-          <TwitterIcon fontSize="small" />
-        </IconButton>
-      </Stack>
+          <Link 
+            href="/privacy" 
+            underline="hover" 
+            color="inherit" 
+            sx={{ 
+              fontSize: { xs: 12, sm: 13, md: 14 },
+              '&:hover': { color: theme.palette.primary.main }
+            }}
+          >
+            Privacy Policy
+          </Link>
+          <Link 
+            href="/about" 
+            underline="hover" 
+            color="inherit" 
+            sx={{ 
+              fontSize: { xs: 12, sm: 13, md: 14 },
+              '&:hover': { color: theme.palette.primary.main }
+            }}
+          >
+            About Us
+          </Link>
+          <Link 
+            href="/contact" 
+            underline="hover" 
+            color="inherit" 
+            sx={{ 
+              fontSize: { xs: 12, sm: 13, md: 14 },
+              '&:hover': { color: theme.palette.primary.main }
+            }}
+          >
+            Contact
+          </Link>
+          {!isMobile && (
+            <>
+              <Link 
+                href="/terms" 
+                underline="hover" 
+                color="inherit" 
+                sx={{ 
+                  fontSize: { xs: 12, sm: 13, md: 14 },
+                  '&:hover': { color: theme.palette.primary.main }
+                }}
+              >
+                Terms of Service
+              </Link>
+              <Link 
+                href="/help" 
+                underline="hover" 
+                color="inherit" 
+                sx={{ 
+                  fontSize: { xs: 12, sm: 13, md: 14 },
+                  '&:hover': { color: theme.palette.primary.main }
+                }}
+              >
+                Help
+              </Link>
+            </>
+          )}
+        </Stack>
 
-      <Divider sx={{ my: 1, opacity: 0.3 }} />
+        {/* Social Media Icons */}
+        <Stack 
+          direction="row" 
+          justifyContent="center" 
+          spacing={isTablet ? 1 : 2}
+          sx={{ mb: 2 }}
+        >
+          <IconButton
+            size={isMobile ? "small" : "medium"}
+            href="https://facebook.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={{ 
+              color: isDark ? '#888' : '#333', 
+              '&:hover': { 
+                color: '#1877F2', // Facebook blue
+                transform: 'scale(1.1)',
+                transition: 'all 0.2s ease'
+              }
+            }}
+          >
+            <FacebookIcon fontSize={isMobile ? "small" : "medium"} />
+          </IconButton>
+          <IconButton
+            size={isMobile ? "small" : "medium"}
+            href="https://instagram.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={{ 
+              color: isDark ? '#888' : '#333', 
+              '&:hover': { 
+                color: '#E4405F', // Instagram pink
+                transform: 'scale(1.1)',
+                transition: 'all 0.2s ease'
+              }
+            }}
+          >
+            <InstagramIcon fontSize={isMobile ? "small" : "medium"} />
+          </IconButton>
+          <IconButton
+            size={isMobile ? "small" : "medium"}
+            href="https://twitter.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={{ 
+              color: isDark ? '#888' : '#333', 
+              '&:hover': { 
+                color: '#1DA1F2', // Twitter blue
+                transform: 'scale(1.1)',
+                transition: 'all 0.2s ease'
+              }
+            }}
+          >
+            <TwitterIcon fontSize={isMobile ? "small" : "medium"} />
+          </IconButton>
+        </Stack>
 
-      <Typography variant="caption" sx={{ fontSize: 12, color: isDark ? '#fcf5f5' : '#777' }}>
-        © {new Date().getFullYear()} FoodHub. All rights reserved.
-      </Typography>
+        <Divider sx={{ my: 1.5, opacity: 0.3 }} />
+
+        {/* Copyright */}
+        <Typography 
+          variant="caption" 
+          sx={{ 
+            fontSize: { xs: 11, sm: 12, md: 13 }, 
+            color: isDark ? '#fcf5f5' : '#777',
+            opacity: 0.8
+          }}
+        >
+          © {new Date().getFullYear()} FoodHub. All rights reserved. | Made with ❤️ in Sri Lanka
+        </Typography>
+      </Container>
     </Box>
   );
 };

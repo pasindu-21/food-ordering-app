@@ -1,115 +1,227 @@
-import React, { useContext } from 'react';
-import { AppBar, Toolbar, Typography, Box, Button, IconButton, Tooltip } from '@mui/material';
+import React, { useContext, useState } from 'react';
+import { 
+  AppBar, 
+  Toolbar, 
+  Typography, 
+  Box, 
+  Button, 
+  IconButton, 
+  Tooltip,
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
+  useMediaQuery,
+  useTheme
+} from '@mui/material';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
+import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
+import NightsStayIcon from '@mui/icons-material/NightsStay';
 import { useColorMode } from '../context/ColorModeContext';
-import { UserContext } from '../context/UserContext'; // Import UserContext
+import { UserContext } from '../context/UserContext';
 
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { mode, toggleColorMode } = useColorMode();
-  const { user, logout } = useContext(UserContext); // Use global user and logout
+  const { user, logout } = useContext(UserContext);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md')); // md breakpoint use කරන්න
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Auth page එකේ nav buttons hide කරන්න, ඒත් logo සහ dark mode keep කරන්න
   const isAuthPage = location.pathname === '/auth';
 
-  const renderNavButtons = () => {
-    if (isAuthPage) return null; // Auth page එකේ nav buttons hide කරන්න
+  const handleMobileMenuToggle = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  const handleMobileMenuClose = () => {
+    setMobileMenuOpen(false);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+    setMobileMenuOpen(false); // Close mobile menu after logout
+  };
+
+  const getNavigationItems = () => {
+    if (isAuthPage) return [];
 
     if (user?.role === 'admin') {
-      return (
-        <>
-          <Button component={Link} to="/admin-dashboard" color="inherit">Admin Panel</Button>
-          <Button 
-            variant="contained"  // Add contained for background
-            color="error"        // Add error for red background
-            onClick={() => {
-              logout(); // Call logout from context
-              navigate('/'); // Redirect to home
-            }}
-          >
-            Logout
-          </Button>
-        </>
-      );
+      return [
+        { text: 'Admin Panel', path: '/admin-dashboard' },
+        { text: 'Logout', action: handleLogout, isLogout: true }
+      ];
     } else if (user?.role === 'owner') {
-      return (
-        <>
-          <Button component={Link} to="/owner-home" color="inherit">Home</Button>
-          <Button component={Link} to="/my-shops" color="inherit">My Shop</Button>
-          <Button component={Link} to="/owner-orders" color="inherit">Today's Orders</Button>
-          <Button component={Link} to="/daily-reports" color="inherit">Daily Reports</Button>
-          <Button 
-            variant="contained"  // Add contained for background
-            color="error"        // Add error for red background
-            onClick={() => {
-              logout(); // Call logout
-              navigate('/'); // Redirect
-            }}
-          >
-            Logout
-          </Button>
-        </>
-      );
+      return [
+        { text: 'Home', path: '/owner-home' },
+        { text: 'My Shop', path: '/my-shops' },
+        { text: "Today's Orders", path: '/owner-orders' },
+        { text: 'Daily Reports', path: '/daily-reports' },
+        { text: 'Logout', action: handleLogout, isLogout: true }
+      ];
     } else if (user?.role === 'user') {
-      return (
-        <>
-          <Button component={Link} to="/user-home" color="inherit">Home</Button>
-          <Button component={Link} to="/shops" color="inherit">View Shops</Button>
-          <Button component={Link} to="/my-orders" color="inherit">My Orders</Button>
-          <Button 
-            variant="contained"  // Add contained for background
-            color="error"        // Add error for red background
-            onClick={() => {
-              logout(); // Call logout
-              navigate('/'); // Redirect
-            }}
-          >
-            Logout
-          </Button>
-        </>
-      );
+      return [
+        { text: 'Home', path: '/user-home' },
+        { text: 'View Shops', path: '/shops' },
+        { text: 'My Orders', path: '/my-orders' },
+        { text: 'Logout', action: handleLogout, isLogout: true }
+      ];
     } else {
-      // Non-logged-in: Separate Login සහ Register buttons, "/auth" එකට link
-      return (
-        <>
-          <Button component={Link} to="/auth" color="inherit">Login</Button>
-          <Button component={Link} to="/auth" color="inherit">Register</Button>
-        </>
-      );
+      return [
+        { text: 'Login', path: '/auth' },
+        { text: 'Register', path: '/auth' }
+      ];
     }
   };
+
+  const navigationItems = getNavigationItems();
+
+  const renderDesktopButtons = () => {
+    if (isAuthPage || isMobile) return null;
+
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        {navigationItems.map((item, index) => (
+          item.isLogout ? (
+            <Button
+              key={index}
+              variant="contained"
+              color="error"
+              onClick={item.action}
+              sx={{ minWidth: 'auto' }}
+            >
+              {item.text}
+            </Button>
+          ) : (
+            <Button
+              key={index}
+              component={Link}
+              to={item.path}
+              color="inherit"
+              sx={{ whiteSpace: 'nowrap' }}
+            >
+              {item.text}
+            </Button>
+          )
+        ))}
+      </Box>
+    );
+  };
+
+  const renderMobileDrawer = () => (
+    <Drawer
+      anchor="right"
+      open={mobileMenuOpen}
+      onClose={handleMobileMenuClose}
+      sx={{
+        '& .MuiDrawer-paper': {
+          width: 250,
+          bgcolor: theme.palette.mode === 'dark' ? '#333' : '#fff',
+        },
+      }}
+    >
+      <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          Menu
+        </Typography>
+        <IconButton onClick={handleMobileMenuClose}>
+          <CloseIcon />
+        </IconButton>
+      </Box>
+      
+      <List>
+        {navigationItems.map((item, index) => (
+          <ListItem 
+            key={index} 
+            button 
+            onClick={() => {
+              if (item.isLogout) {
+                item.action();
+              } else {
+                navigate(item.path);
+                handleMobileMenuClose();
+              }
+            }}
+            sx={{
+              bgcolor: item.isLogout ? 'error.main' : 'transparent',
+              color: item.isLogout ? 'white' : 'inherit',
+              mb: item.isLogout ? 1 : 0,
+              mx: item.isLogout ? 1 : 0,
+              borderRadius: item.isLogout ? 1 : 0,
+              '&:hover': {
+                bgcolor: item.isLogout ? 'error.dark' : 'action.hover',
+              }
+            }}
+          >
+            <ListItemText 
+              primary={item.text} 
+              sx={{ 
+                textAlign: item.isLogout ? 'center' : 'left',
+                fontWeight: item.isLogout ? 600 : 400 
+              }} 
+            />
+          </ListItem>
+        ))}
+      </List>
+    </Drawer>
+  );
 
   const handleLogoClick = () => {
     if (user?.role === 'admin') navigate('/admin-dashboard');
     else if (user?.role === 'owner') navigate('/owner-home');
     else if (user?.role === 'user') navigate('/user-home');
-    else navigate('/'); // Non-logged-in ට shops page එකට (default "/")
+    else navigate('/');
   };
 
   return (
-    <AppBar position="static" color="primary" elevation={2}>
-      <Toolbar>
-        <Typography
-          variant="h6"
-          sx={{ fontWeight: 700, cursor: 'pointer', flexGrow: 1 }}
-          onClick={handleLogoClick}
-        >
-          FoodHub
-        </Typography>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          {renderNavButtons()}
-          {/* Dark mode button එක always visible, හැම page එකකම තියෙන්න */}
-          <Tooltip title={mode === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}>
-            <IconButton color="inherit" onClick={toggleColorMode}>
-              {mode === "dark" ? <Brightness7Icon /> : <Brightness4Icon />}
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </Toolbar>
-    </AppBar>
+    <>
+      <AppBar position="static" color="primary" elevation={2}>
+        <Toolbar sx={{ minHeight: { xs: 56, sm: 64 } }}>
+          <Typography
+            variant="h6"
+            sx={{ 
+              fontWeight: 700, 
+              cursor: 'pointer', 
+              flexGrow: 1,
+              fontSize: { xs: '1.1rem', sm: '1.25rem' } // Responsive font size
+            }}
+            onClick={handleLogoClick}
+          >
+            FoodHub
+          </Typography>
+          
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            {/* Desktop Navigation */}
+            {renderDesktopButtons()}
+            
+            {/* Mobile Menu Button */}
+            {isMobile && !isAuthPage && navigationItems.length > 0 && (
+              <IconButton 
+                color="inherit" 
+                onClick={handleMobileMenuToggle}
+                sx={{ ml: 1 }}
+              >
+                <MenuIcon />
+              </IconButton>
+            )}
+            
+            {/* Dark Mode Toggle - Always visible */}
+            <Tooltip title={mode === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}>
+              <IconButton color="inherit" onClick={toggleColorMode}>
+                {mode === "dark" ? <NightsStayIcon /> : <NightsStayIcon />}
+              </IconButton>
+            </Tooltip>
+          </Box>
+        </Toolbar>
+      </AppBar>
+      
+      {/* Mobile Drawer */}
+      {isMobile && renderMobileDrawer()}
+    </>
   );
 };
 

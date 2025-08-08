@@ -34,21 +34,15 @@ const UserShopList = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // Review add dialog state
+  // Review states
   const [reviewDialog, setReviewDialog] = useState({ open: false, shopId: null });
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [reviewSnackbar, setReviewSnackbar] = useState({ open: false, message: '', severity: 'success' });
-
-  // Reviews data state
   const [reviewsData, setReviewsData] = useState({});
   const [reviewsPopup, setReviewsPopup] = useState({ open: false, shopId: null, shopName: '' });
-
-  // Edit review dialog state
   const [editReviewDialog, setEditReviewDialog] = useState({ open: false, reviewId: null, shopId: null, initialRating: 0, initialComment: '' });
-
-  // Delete confirmation dialog state
   const [deleteConfirmDialog, setDeleteConfirmDialog] = useState({ open: false, reviewId: null, shopId: null });
 
   useEffect(() => {
@@ -213,23 +207,49 @@ const UserShopList = () => {
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Box textAlign="center" mb={4}>
-        <Typography variant={isMobile ? "h5" : "h4"} fontWeight={700} display="inline-flex" alignItems="center" color="primary.main" gutterBottom>
-          <StorefrontIcon fontSize="large" sx={{ mr: 1 }} />
+        <Typography 
+          variant={isMobile ? "h5" : "h4"} 
+          fontWeight={700} 
+          display="inline-flex" 
+          alignItems="center" 
+          color="primary.main" 
+          gutterBottom
+          sx={{
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? 1 : 0
+          }}
+        >
+          <StorefrontIcon fontSize={isMobile ? "medium" : "large"} sx={{ mr: isMobile ? 0 : 1 }} />
           Available Shops
         </Typography>
-        <Typography color="text.secondary" mt={1} fontSize="large">
+        <Typography 
+          color="text.secondary" 
+          mt={1} 
+          sx={{ fontSize: isMobile ? '0.875rem' : 'large' }}
+        >
           Choose a shop to view menu and place your order.
         </Typography>
         <Paper
           sx={{
-            mt: 3, p: '2px 8px', display: 'flex', alignItems: 'center', width: isMobile ? '100%' : 400,
-            mx: 'auto', borderRadius: 3, bgcolor: theme.palette.action.hover, boxShadow: theme.shadows[1]
+            mt: 3, 
+            p: '2px 8px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            width: isMobile ? '100%' : 400,
+            mx: 'auto', 
+            borderRadius: isMobile ? 2 : 3, 
+            bgcolor: theme.palette.action.hover, 
+            boxShadow: theme.shadows[1]
           }}
         >
-          <SearchIcon sx={{ mr: 1, color: theme.palette.text.secondary }} />
+          <SearchIcon sx={{ 
+            mr: 1, 
+            color: theme.palette.text.secondary,
+            fontSize: isMobile ? '1.25rem' : undefined
+          }} />
           <InputBase
-            sx={{ ml: 1, flex: 1 }}
-            placeholder="Search shops..."
+            sx={{ ml: 1, flex: 1, fontSize: isMobile ? '0.875rem' : undefined }}
+            placeholder={isMobile ? "Search..." : "Search shops..."}
             value={search}
             onChange={e => setSearch(e.target.value)}
             aria-label="search shops"
@@ -240,9 +260,13 @@ const UserShopList = () => {
       {loading ? (
         <Grid container spacing={isMobile ? 2 : 4}>
           {[1, 2, 3, 4, 5, 6].map(n => (
-            <Grid item xs={12} sm={6} md={4} key={n}>
-              <Card sx={{ p:0, borderRadius: 4 }}>
-                <Skeleton variant="rectangular" height={170} sx={{ borderTopLeftRadius: 16, borderTopRightRadius: 16 }} />
+            <Grid item xs={6} sm={6} md={4} key={n}>  {/* 2 per row on mobile */}
+              <Card sx={{ p: 0, borderRadius: 4 }}>
+                <Skeleton 
+                  variant="rectangular" 
+                  height={isMobile ? 120 : 170} 
+                  sx={{ borderTopLeftRadius: 16, borderTopRightRadius: 16 }} 
+                />
                 <CardContent>
                   <Skeleton variant="text" width={"60%"} />
                   <Skeleton variant="text" width={"45%"} />
@@ -256,124 +280,227 @@ const UserShopList = () => {
           ))}
         </Grid>
       ) : filteredShops.length === 0 ? (
-        <Paper elevation={3} sx={{ p: 4, textAlign: "center", bgcolor: theme.palette.background.paper, borderRadius: 4 }}>
-          <Typography variant="h6" color="text.secondary" sx={{mb:1}}>
-            No shops are available at the moment.
+        <Paper elevation={3} sx={{ 
+          p: isMobile ? 3 : 4, 
+          textAlign: "center", 
+          bgcolor: theme.palette.background.paper, 
+          borderRadius: 4,
+          mx: isMobile ? 1 : 0
+        }}>
+          <StorefrontIcon sx={{ 
+            fontSize: isMobile ? 40 : 60, 
+            color: 'text.secondary', 
+            mb: 2 
+          }} />
+          <Typography 
+            variant="h6" 
+            color="text.secondary" 
+            sx={{ mb: 1, fontSize: isMobile ? '1rem' : '1.25rem' }}
+          >
+            {search ? 'No shops found' : 'No shops are available at the moment.'}
           </Typography>
+          {search && (
+            <Button 
+              variant="outlined" 
+              onClick={() => setSearch('')}
+              sx={{ mt: 2 }}
+            >
+              Clear Search
+            </Button>
+          )}
         </Paper>
       ) : (
         <Grid container spacing={isMobile ? 2 : 4}>
           {filteredShops.map(shop => {
             const data = reviewsData[shop._id] || { averageRating: 0, reviews: [] };
             return (
-              <Grid item xs={12} sm={6} md={4} key={shop._id}>
+              <Grid item xs={6} sm={6} md={4} key={shop._id}>  {/* 2 per row on mobile */}
                 <Card
                   elevation={6}
                   sx={{
-                    height: '97%',
+                    height: '100%',
                     display: 'flex',
                     flexDirection: 'column',
                     borderRadius: 4,
                     boxShadow: theme.shadows[isMobile ? 3 : 7],
                     transition: 'transform 0.22s, box-shadow 0.22s',
                     '&:hover': {
-                      transform: 'scale(1.018)',
-                      boxShadow: theme.shadows[13],
+                      transform: isMobile ? 'scale(1.01)' : 'scale(1.018)',
+                      boxShadow: theme.shadows[isMobile ? 6 : 13],
                     },
                   }}
                 >
                   <CardMedia
                     component="img"
-                    height="150"
+                    height={isMobile ? "120" : "150"}
                     image={shop.image || placeholderImg}
                     alt={shop.shopName}
                     sx={{ objectFit: "cover", borderTopLeftRadius: 16, borderTopRightRadius: 16 }}
                   />
-                  <CardContent sx={{ flexGrow: 1, p: isMobile ? 2 : 3 }}>
-                    <Typography gutterBottom variant="h6" component="div" fontWeight={700}>
+                  <CardContent sx={{ flexGrow: 1, p: isMobile ? 1.5 : 3 }}>
+                    <Typography 
+                      gutterBottom 
+                      variant="h6" 
+                      component="div" 
+                      fontWeight={700}
+                      sx={{ 
+                        fontSize: isMobile ? '0.9rem' : '1.25rem',
+                        lineHeight: 1.2
+                      }}
+                    >
                       {shop.shopName}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      {shop.location ? `Location: ${shop.location}` : ''}
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary" 
+                      gutterBottom
+                      sx={{ fontSize: isMobile ? '0.75rem' : '0.875rem' }}
+                    >
+                      {shop.location ? `📍 ${shop.location}` : ''}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" gutterBottom display="flex" alignItems="center">
-                      Mobile No: {shop.phone || 'N/A'}
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary" 
+                      gutterBottom
+                      sx={{ fontSize: isMobile ? '0.75rem' : '0.875rem' }}
+                    >
+                      📞 {shop.phone || 'N/A'}
                     </Typography>
                     
                     <Box sx={{ mt: 1 }}>
                       <Box sx={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                        <Typography variant="subtitle2" color="primary" fontWeight={600} gutterBottom>Menu</Typography>
-                        {(shop.menuItems?.length > 3) && (
-                          <Button size="small" color="primary" onClick={() => toggleExpand(shop._id)} endIcon={expandedShopId === shop._id ? <ExpandLess /> : <ExpandMore />} sx={{textTransform:'none'}}>
-                            {expandedShopId === shop._id ? "Show less" : "Show more"}
+                        <Typography 
+                          variant="subtitle2" 
+                          color="primary" 
+                          fontWeight={600} 
+                          gutterBottom
+                          sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem' }}
+                        >
+                          Menu
+                        </Typography>
+                        {(shop.menuItems?.length > (isMobile ? 2 : 3)) && (
+                          <Button 
+                            size="small" 
+                            color="primary" 
+                            onClick={() => toggleExpand(shop._id)} 
+                            endIcon={expandedShopId === shop._id ? <ExpandLess /> : <ExpandMore />} 
+                            sx={{
+                              textTransform:'none',
+                              fontSize: isMobile ? '0.7rem' : '0.875rem'
+                            }}
+                          >
+                            {expandedShopId === shop._id ? (isMobile ? "Less" : "Show less") : (isMobile ? "More" : "Show more")}
                           </Button>
                         )}
                       </Box>
-                      <List dense sx={{ bgcolor: theme.palette.action.hover, borderRadius: 2, px: 1, py: 0.5, maxHeight: 120, overflow: 'auto' }}>
-                        
-{(shop.menuItems && shop.menuItems.length > 0
-  ? expandedShopId === shop._id
-    ? shop.menuItems
-    : shop.menuItems.slice(0, 3)
-  : []
-).map(item => (
-  <ListItem key={item._id} sx={{ py: 0 }}>
-    <ListItemText
-      primary={
-        <Typography variant="body2" fontWeight={500}>
-          {item.name} <span style={{ color: theme.palette.text.secondary }}>- Rs.{item.price}</span>
-        </Typography>
-      }
-      secondary={
-        <Box component="span" display="flex" flexDirection="column">
-          <Typography variant="caption" color="primary.main" fontWeight="bold">
-            Available: (B:{item.availableBreakfastQty || 0}, L:{item.availableLunchQty || 0}, D:{item.availableDinnerQty || 0})
-          </Typography>
-        </Box>
-      }
-    />
-  </ListItem>
-))}
-
+                      <List 
+                        dense 
+                        sx={{ 
+                          bgcolor: theme.palette.action.hover, 
+                          borderRadius: isMobile ? 1 : 2, 
+                          px: isMobile ? 0.5 : 1, 
+                          py: 0.5, 
+                          maxHeight: isMobile ? 80 : 120, 
+                          overflow: 'auto' 
+                        }}
+                      >
+                        {(shop.menuItems && shop.menuItems.length > 0
+                          ? expandedShopId === shop._id
+                            ? shop.menuItems
+                            : shop.menuItems.slice(0, isMobile ? 2 : 3)
+                          : []
+                        ).map(item => (
+                          <ListItem key={item._id} sx={{ py: 0 }}>
+                            <ListItemText
+                              primary={
+                                <Typography 
+                                  variant="body2" 
+                                  fontWeight={500}
+                                  sx={{ fontSize: isMobile ? '0.7rem' : '0.875rem' }}
+                                >
+                                  {item.name} <span style={{ color: theme.palette.text.secondary }}>- Rs.{item.price}</span>
+                                </Typography>
+                              }
+                              secondary={
+                                <Typography 
+                                  variant="caption" 
+                                  color="primary.main" 
+                                  fontWeight="bold"
+                                  sx={{ fontSize: isMobile ? '0.65rem' : '0.75rem' }}
+                                >
+                                  Available: (B:{item.availableBreakfastQty || 0}, L:{item.availableLunchQty || 0}, D:{item.availableDinnerQty || 0})
+                                </Typography>
+                              }
+                            />
+                          </ListItem>
+                        ))}
                       </List>
                       {shop.menuItems && shop.menuItems.length === 0 && (
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography 
+                          variant="body2" 
+                          color="text.secondary"
+                          sx={{
+                            fontSize: isMobile ? '0.75rem' : '0.875rem',
+                            textAlign: 'center',
+                            py: 2
+                          }}
+                        >
                           No menu items available.
                         </Typography>
                       )}
                     </Box>
-                    <Divider sx={{ my: 2 }} />
+                    <Divider sx={{ my: isMobile ? 1 : 2 }} />
                     <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ cursor: 'pointer' }} onClick={() => openReviewsPopup(shop._id, shop.shopName)}>
                       <Box display="flex" alignItems="center">
-                        <StarIcon sx={{ color: 'gold', mr: 1 }} />
-                        <Typography variant="subtitle2" color="secondary.main" fontWeight="bold">
+                        <StarIcon sx={{ 
+                          color: 'gold', 
+                          mr: 1,
+                          fontSize: isMobile ? '0.875rem' : '1rem'
+                        }} />
+                        <Typography 
+                          variant="subtitle2" 
+                          color="secondary.main" 
+                          fontWeight="bold"
+                          sx={{ fontSize: isMobile ? '0.75rem' : '0.875rem' }}
+                        >
                           Customer Reviews ({data.reviews.length})
                         </Typography>
                       </Box>
                     </Box>
                     <Box display="flex" alignItems="center" mt={1}>
-                      <Rating value={parseFloat(data.averageRating)} readOnly precision={0.5} />
-                      <Typography variant="body2" color="text.secondary" ml={1}>
+                      <Rating 
+                        value={parseFloat(data.averageRating)} 
+                        readOnly 
+                        precision={0.5}
+                        size={isMobile ? "small" : "medium"}
+                      />
+                      <Typography 
+                        variant="body2" 
+                        color="text.secondary" 
+                        ml={1}
+                        sx={{ fontSize: isMobile ? '0.7rem' : '0.875rem' }}
+                      >
                         {data.averageRating} / 5
                       </Typography>
                     </Box>
-                     <CardActions sx={{ mt: 'auto', p: isMobile ? 1 : 2 }}>
+                  </CardContent>
+                  <CardActions sx={{ mt: 'auto', p: isMobile ? 1 : 2 }}>
                     <Button
                       fullWidth
                       variant="contained"
-                      size={isMobile ? "medium" : "large"}
+                      size={isMobile ? "small" : "large"}
                       sx={{
-                        borderRadius: 99, fontWeight: 700,
-                        transition:'transform 0.18s',
-                        '&:active': { transform:'scale(0.97)' }
+                        borderRadius: isMobile ? 2 : 25, 
+                        fontWeight: 700,
+                        transition: 'transform 0.18s',
+                        '&:active': { transform: 'scale(0.97)' },
+                        fontSize: isMobile ? '0.8rem' : '1rem'
                       }}
                       onClick={() => handleOpenDialog(shop)}
                     >
                       Order
                     </Button>
                   </CardActions>
-                  </CardContent>
-                 
                 </Card>
               </Grid>
             );
@@ -381,7 +508,8 @@ const UserShopList = () => {
         </Grid>
       )}
 
-      <Dialog open={!!openDialogShop} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+      {/* Order Dialog */}
+      <Dialog open={!!openDialogShop} onClose={handleCloseDialog} maxWidth="sm" fullWidth fullScreen={isMobile}>
         <DialogTitle sx={{ m: 0, p: 2 }}>
           {openDialogShop?.shopName && `Order from ${openDialogShop.shopName}`}
           <IconButton
@@ -397,17 +525,25 @@ const UserShopList = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isLoginModalOpen} onClose={handleCloseLoginModal}>
+      {/* Login Modal */}
+      <Dialog open={isLoginModalOpen} onClose={handleCloseLoginModal} fullScreen={isMobile}>
         <DialogTitle>Login Required</DialogTitle>
         <DialogContent>
-          <Typography color="text.secondary" sx={{mb:2}}>To place an order, you need to log in or create an account first.</Typography>
+          <Typography color="text.secondary" sx={{mb:2}}>
+            To place an order or write reviews, you need to log in or create an account first.
+          </Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseLoginModal}>Cancel</Button>
+        <DialogActions sx={{
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? 1 : 0,
+          p: isMobile ? 2 : 1
+        }}>
+          <Button onClick={handleCloseLoginModal} fullWidth={isMobile}>Cancel</Button>
           <Button
             variant="contained"
             onClick={() => navigate('/auth')}
-            sx={{ fontWeight: 700, borderRadius: 99 }}
+            sx={{ fontWeight: 700, borderRadius: isMobile ? 2 : 25 }}
+            fullWidth={isMobile}
           >
             Login / Register
           </Button>
@@ -415,7 +551,7 @@ const UserShopList = () => {
       </Dialog>
 
       {/* Add Review Dialog */}
-      <Dialog open={reviewDialog.open} onClose={() => setReviewDialog({ open: false })} maxWidth="sm" fullWidth>
+      <Dialog open={reviewDialog.open} onClose={() => setReviewDialog({ open: false })} maxWidth="sm" fullWidth fullScreen={isMobile}>
         <DialogTitle>Leave a Review</DialogTitle>
         <DialogContent>
           <Box mb={2}>
@@ -424,13 +560,13 @@ const UserShopList = () => {
               value={rating} 
               onChange={(e, newValue) => setRating(newValue)} 
               precision={0.5}
-              size="large"
+              size={isMobile ? "medium" : "large"}
             />
           </Box>
           <TextField
             label="Your Review"
             multiline
-            rows={4}
+            rows={isMobile ? 3 : 4}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             fullWidth
@@ -439,15 +575,21 @@ const UserShopList = () => {
             helperText={`${comment.length}/500 characters (minimum 10)`}
             inputProps={{ maxLength: 500 }}
             error={comment.length > 0 && comment.length < 10}
+            size={isMobile ? "small" : "medium"}
           />
           {reviewSubmitting && <CircularProgress size={24} sx={{ mt: 1 }} />}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setReviewDialog({ open: false })}>Cancel</Button>
+        <DialogActions sx={{
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? 1 : 0,
+          p: isMobile ? 2 : 1
+        }}>
+          <Button onClick={() => setReviewDialog({ open: false })} fullWidth={isMobile}>Cancel</Button>
           <Button 
             onClick={handleSubmitReview} 
             variant="contained" 
             disabled={reviewSubmitting || rating === 0 || comment.trim().length < 10}
+            fullWidth={isMobile}
           >
             {reviewSubmitting ? 'Submitting...' : 'Submit Review'}
           </Button>
@@ -455,7 +597,7 @@ const UserShopList = () => {
       </Dialog>
 
       {/* Edit Review Dialog */}
-      <Dialog open={editReviewDialog.open} onClose={() => setEditReviewDialog({ open: false })} maxWidth="sm" fullWidth>
+      <Dialog open={editReviewDialog.open} onClose={() => setEditReviewDialog({ open: false })} maxWidth="sm" fullWidth fullScreen={isMobile}>
         <DialogTitle>Edit Your Review</DialogTitle>
         <DialogContent>
           <Box mb={2}>
@@ -464,13 +606,13 @@ const UserShopList = () => {
               value={rating} 
               onChange={(e, newValue) => setRating(newValue)} 
               precision={0.5}
-              size="large"
+              size={isMobile ? "medium" : "large"}
             />
           </Box>
           <TextField
             label="Your Review"
             multiline
-            rows={4}
+            rows={isMobile ? 3 : 4}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             fullWidth
@@ -479,15 +621,21 @@ const UserShopList = () => {
             helperText={`${comment.length}/500 characters (minimum 10)`}
             inputProps={{ maxLength: 500 }}
             error={comment.length > 0 && comment.length < 10}
+            size={isMobile ? "small" : "medium"}
           />
           {reviewSubmitting && <CircularProgress size={24} sx={{ mt: 1 }} />}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditReviewDialog({ open: false })}>Cancel</Button>
+        <DialogActions sx={{
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? 1 : 0,
+          p: isMobile ? 2 : 1
+        }}>
+          <Button onClick={() => setEditReviewDialog({ open: false })} fullWidth={isMobile}>Cancel</Button>
           <Button 
             onClick={handleSubmitEditReview} 
             variant="contained" 
             disabled={reviewSubmitting || rating === 0 || comment.trim().length < 10}
+            fullWidth={isMobile}
           >
             {reviewSubmitting ? 'Updating...' : 'Update Review'}
           </Button>
@@ -495,30 +643,41 @@ const UserShopList = () => {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteConfirmDialog.open} onClose={() => setDeleteConfirmDialog({ open: false })}>
+      <Dialog open={deleteConfirmDialog.open} onClose={() => setDeleteConfirmDialog({ open: false })} fullScreen={isMobile}>
         <DialogTitle>Delete Review</DialogTitle>
         <DialogContent>
           <Typography>Are you sure you want to delete this review? This action cannot be undone.</Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteConfirmDialog({ open: false })}>Cancel</Button>
-          <Button onClick={handleDeleteReview} color="error" variant="contained">
+        <DialogActions sx={{
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? 1 : 0,
+          p: isMobile ? 2 : 1
+        }}>
+          <Button onClick={() => setDeleteConfirmDialog({ open: false })} fullWidth={isMobile}>Cancel</Button>
+          <Button onClick={handleDeleteReview} color="error" variant="contained" fullWidth={isMobile}>
             Delete
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Reviews Popup Dialog - Improved UI */}
+      {/* Enhanced Reviews Popup Dialog */}
       <Dialog 
         open={reviewsPopup.open} 
         onClose={closeReviewsPopup} 
         maxWidth="md" 
         fullWidth
+        fullScreen={isMobile}
         PaperProps={{
-          sx: { borderRadius: 3 }
+          sx: { borderRadius: isMobile ? 0 : 3 }
         }}
       >
-        <DialogTitle sx={{ bgcolor: 'primary.main', color: 'white', display: 'flex', alignItems: 'center' }}>
+        <DialogTitle sx={{ 
+          bgcolor: 'primary.main', 
+          color: 'white', 
+          display: 'flex', 
+          alignItems: 'center',
+          p: isMobile ? 2 : 3
+        }}>
           <StarIcon sx={{ mr: 1 }} />
           Reviews for {reviewsPopup.shopName}
           <IconButton
@@ -533,28 +692,43 @@ const UserShopList = () => {
           {(() => {
             const currentReviews = reviewsData[reviewsPopup.shopId]?.reviews || [];
             const currentUserId = sessionStorage.getItem('userId');
+            const isLoggedIn = !!sessionStorage.getItem('token');
             
             return currentReviews.length === 0 ? (
-              <Box sx={{ p: 4, textAlign: 'center' }}>
-                <PersonIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
-                <Typography variant="h6" color="text.secondary" gutterBottom>
+              <Box sx={{ p: isMobile ? 3 : 4, textAlign: 'center' }}>
+                <PersonIcon sx={{ 
+                  fontSize: isMobile ? 40 : 60, 
+                  color: 'text.secondary', 
+                  mb: 2 
+                }} />
+                <Typography 
+                  variant={isMobile ? "h6" : "h5"} 
+                  color="text.secondary" 
+                  gutterBottom
+                >
                   No reviews yet
                 </Typography>
-                <Typography color="text.secondary">
+                <Typography 
+                  color="text.secondary"
+                  sx={{ fontSize: isMobile ? '0.875rem' : '1rem' }}
+                >
                   Be the first to share your experience!
                 </Typography>
               </Box>
             ) : (
-              <Box sx={{ maxHeight: 500, overflowY: 'auto' }}>
+              <Box sx={{ 
+                maxHeight: isMobile ? 'calc(100vh - 200px)' : 500, 
+                overflowY: 'auto' 
+              }}>
                 {currentReviews.map((review, index) => {
-                  const isOwnReview = review.user?._id === currentUserId;
+                  const isOwnReview = isLoggedIn && currentUserId && String(review.user?._id) === String(currentUserId);
                   
                   return (
                     <Card 
                       key={review._id} 
                       variant="outlined" 
                       sx={{ 
-                        m: 2, 
+                        m: isMobile ? 1 : 2, 
                         borderRadius: 2,
                         border: isOwnReview ? `2px solid ${theme.palette.primary.light}` : undefined,
                         bgcolor: isOwnReview ? 'primary.50' : 'background.paper'
@@ -565,27 +739,64 @@ const UserShopList = () => {
                           <Avatar 
                             sx={{ 
                               bgcolor: isOwnReview ? 'primary.main' : 'secondary.main', 
-                              mr: 2 
+                              mr: isMobile ? 1 : 2,
+                              width: isMobile ? 32 : 40,
+                              height: isMobile ? 32 : 40,
+                              fontSize: isMobile ? '0.875rem' : '1rem'
                             }}
                           >
                             {generateAvatar(review.user?.name)}
                           </Avatar>
                           <Box flex={1}>
-                            <Box display="flex" alignItems="center" justifyContent="space-between">
-                              <Typography variant="subtitle1" fontWeight="bold">
+                            <Box 
+                              display="flex" 
+                              alignItems={isMobile ? "flex-start" : "center"} 
+                              justifyContent="space-between"
+                              flexDirection={isMobile ? 'column' : 'row'}
+                            >
+                              <Typography 
+                                variant="subtitle1" 
+                                fontWeight="bold"
+                                sx={{ fontSize: isMobile ? '0.9rem' : '1rem' }}
+                              >
                                 {review.user?.name || 'Anonymous'}
                                 {isOwnReview && (
-                                  <Typography component="span" variant="caption" color="primary" sx={{ ml: 1 }}>
+                                  <Typography 
+                                    component="span" 
+                                    variant="caption" 
+                                    color="primary" 
+                                    sx={{ ml: 1, fontSize: isMobile ? '0.7rem' : '0.75rem' }}
+                                  >
                                     (Your review)
                                   </Typography>
                                 )}
                               </Typography>
-                              <Typography variant="caption" color="text.secondary">
+                              <Typography 
+                                variant="caption" 
+                                color="text.secondary"
+                                sx={{ 
+                                  fontSize: isMobile ? '0.7rem' : '0.75rem',
+                                  mt: isMobile ? 0.5 : 0
+                                }}
+                              >
                                 {formatDate(review.createdAt)}
                               </Typography>
                             </Box>
-                            <Rating value={review.rating} readOnly size="small" sx={{ my: 0.5 }} />
-                            <Typography variant="body2" color="text.primary" sx={{ mt: 1 }}>
+                            <Rating 
+                              value={review.rating} 
+                              readOnly 
+                              size={isMobile ? "small" : "medium"} 
+                              sx={{ my: 0.5 }} 
+                            />
+                            <Typography 
+                              variant="body2" 
+                              color="text.primary" 
+                              sx={{ 
+                                mt: 1,
+                                fontSize: isMobile ? '0.8rem' : '0.875rem',
+                                lineHeight: 1.5
+                              }}
+                            >
                               {review.comment}
                             </Typography>
                             
@@ -595,25 +806,47 @@ const UserShopList = () => {
                                 key={replyIndex} 
                                 sx={{ 
                                   mt: 2, 
-                                  ml: 3, 
-                                  p: 2, 
+                                  ml: isMobile ? 1 : 3, 
+                                  p: isMobile ? 1.5 : 2, 
                                   bgcolor: 'action.hover', 
-                                  borderRadius: 2,
+                                  borderRadius: isMobile ? 1 : 2,
                                   borderLeft: `4px solid ${theme.palette.info.main}`
                                 }}
                               >
                                 <Box display="flex" alignItems="center" mb={1}>
-                                  <Avatar sx={{ bgcolor: 'info.main', width: 24, height: 24, mr: 1, fontSize: '0.875rem' }}>
+                                  <Avatar sx={{ 
+                                    bgcolor: 'info.main', 
+                                    width: isMobile ? 20 : 24, 
+                                    height: isMobile ? 20 : 24, 
+                                    mr: 1, 
+                                    fontSize: isMobile ? '0.675rem' : '0.875rem'
+                                  }}>
                                     {generateAvatar(reply.owner?.name)}
                                   </Avatar>
-                                  <Typography variant="caption" fontWeight="bold" color="info.main">
+                                  <Typography 
+                                    variant="caption" 
+                                    fontWeight="bold" 
+                                    color="info.main"
+                                    sx={{ fontSize: isMobile ? '0.7rem' : '0.75rem' }}
+                                  >
                                     {reply.owner?.name} (Owner)
                                   </Typography>
-                                  <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto' }}>
+                                  <Typography 
+                                    variant="caption" 
+                                    color="text.secondary" 
+                                    sx={{ 
+                                      ml: 'auto',
+                                      fontSize: isMobile ? '0.65rem' : '0.7rem'
+                                    }}
+                                  >
                                     {formatDate(reply.createdAt)}
                                   </Typography>
                                 </Box>
-                                <Typography variant="body2" color="text.primary">
+                                <Typography 
+                                  variant="body2" 
+                                  color="text.primary"
+                                  sx={{ fontSize: isMobile ? '0.75rem' : '0.8rem' }}
+                                >
                                   {reply.comment}
                                 </Typography>
                               </Box>
@@ -621,28 +854,50 @@ const UserShopList = () => {
                           </Box>
                         </Box>
                         
-                        {isOwnReview && (
-                          <Box display="flex" justifyContent="flex-end" gap={1}>
+                        {/* Only show edit/delete for logged-in users' own reviews */}
+                        {isLoggedIn && isOwnReview && (
+                          <Box 
+                            display="flex" 
+                            justifyContent="flex-end" 
+                            gap={1}
+                            mt={2}
+                            pt={2}
+                            borderTop={1}
+                            borderColor="divider"
+                            flexDirection={isMobile ? 'column' : 'row'}
+                          >
                             <Button 
                               size="small" 
+                              variant="outlined"
                               startIcon={<EditIcon />}
                               onClick={() => handleOpenEditReview(review)}
-                              sx={{ textTransform: 'none' }}
+                              sx={{ 
+                                textTransform: 'none',
+                                fontSize: isMobile ? '0.8rem' : '0.875rem',
+                                borderRadius: 2
+                              }}
+                              fullWidth={isMobile}
                             >
-                              Edit
+                              Edit Review
                             </Button>
                             <Button 
                               size="small" 
                               color="error"
+                              variant="outlined"
                               startIcon={<DeleteIcon />}
                               onClick={() => setDeleteConfirmDialog({ 
                                 open: true, 
                                 reviewId: review._id, 
                                 shopId: reviewsPopup.shopId 
                               })}
-                              sx={{ textTransform: 'none' }}
+                              sx={{ 
+                                textTransform: 'none',
+                                fontSize: isMobile ? '0.8rem' : '0.875rem',
+                                borderRadius: 2
+                              }}
+                              fullWidth={isMobile}
                             >
-                              Delete
+                              Delete Review
                             </Button>
                           </Box>
                         )}
@@ -654,16 +909,26 @@ const UserShopList = () => {
             );
           })()}
         </DialogContent>
-        <DialogActions sx={{ p: 2, bgcolor: 'action.hover' }}>
+        <DialogActions sx={{ 
+          p: isMobile ? 1.5 : 2, 
+          bgcolor: 'action.hover',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? 1 : 0
+        }}>
           <Button 
             onClick={() => handleOpenReview(reviewsPopup.shopId)} 
             variant="contained"
             startIcon={<StarIcon />}
             sx={{ borderRadius: 2 }}
+            fullWidth={isMobile}
           >
             Write a Review
           </Button>
-          <Button onClick={closeReviewsPopup} sx={{ borderRadius: 2 }}>
+          <Button 
+            onClick={closeReviewsPopup} 
+            sx={{ borderRadius: 2 }}
+            fullWidth={isMobile}
+          >
             Close
           </Button>
         </DialogActions>
@@ -674,7 +939,10 @@ const UserShopList = () => {
         open={reviewSnackbar.open} 
         autoHideDuration={6000} 
         onClose={() => setReviewSnackbar({ ...reviewSnackbar, open: false })}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ 
+          vertical: isMobile ? 'top' : 'bottom', 
+          horizontal: 'center' 
+        }}
       >
         <Alert 
           onClose={() => setReviewSnackbar({ ...reviewSnackbar, open: false })} 

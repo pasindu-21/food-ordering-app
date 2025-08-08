@@ -48,8 +48,8 @@ const AuthForm = () => {
     const errors = {};
     if (!form.email.includes('@')) errors.email = 'Invalid email format';
     // Removed strong password check for now
-    // TODO: Add strong password validation later (e.g., length, uppercase, numbers, etc.)
-    // if (form.password.length < 6) errors.password = 'Password must be at least 6 characters';
+     //TODO: Add strong password validation later (e.g., length, uppercase, numbers, etc.)
+    //if (form.password.length < 6) errors.password = 'Password must be at least 6 characters';
     if (!isSignIn && form.name.trim() === '') errors.name = 'Name is required';
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
