@@ -44,13 +44,36 @@ const AuthForm = () => {
     setValidationErrors({ ...validationErrors, [e.target.name]: '' });
   };
 
+  const validatePassword = (password) => {
+    const errors = [];
+    if (password.length < 8) {
+      errors.push('Password must be at least 8 characters long');
+    }
+    if (!/[A-Z]/.test(password)) {
+      errors.push('Password must contain at least one uppercase letter');
+    }
+    if (!/[a-z]/.test(password)) {
+      errors.push('Password must contain at least one lowercase letter');
+    }
+    if (!/[0-9]/.test(password)) {
+      errors.push('Password must contain at least one number');
+    }
+    if (!/[^A-Za-z0-9]/.test(password)) {
+      errors.push('Password must contain at least one special character');
+    }
+    return errors;
+  };
+
   const validateForm = () => {
     const errors = {};
     if (!form.email.includes('@')) errors.email = 'Invalid email format';
-    // Removed strong password check for now
-     //TODO: Add strong password validation later (e.g., length, uppercase, numbers, etc.)
-    //if (form.password.length < 6) errors.password = 'Password must be at least 6 characters';
     if (!isSignIn && form.name.trim() === '') errors.name = 'Name is required';
+
+    const passwordErrors = validatePassword(form.password);
+    if (passwordErrors.length > 0) {
+      errors.password = passwordErrors.join('. ');
+    }
+
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -354,4 +377,3 @@ const AuthForm = () => {
 };
 
 export default AuthForm;
-
