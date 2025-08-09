@@ -495,21 +495,21 @@ const OwnerShopList = () => {
                                           label={`B: ${item.breakfastQty || 0}`}
                                           color="primary"
                                           size="small"
-                                          sx={{ fontWeight: 500 }}
+                                          sx={{ fontWeight: 500 ,cursor: 'default',pointerEvents: 'none' }}
                                         />
                                         <Chip
                                           icon={<LunchDiningIcon fontSize="small" />}
                                           label={`L: ${item.lunchQty || 0}`}
                                           color="secondary"
                                           size="small"
-                                          sx={{ fontWeight: 500 }}
+                                          sx={{ fontWeight: 500 ,cursor: 'default',pointerEvents: 'none' }}
                                         />
                                         <Chip
                                           icon={<DinnerDiningIcon fontSize="small" />}
                                           label={`D: ${item.dinnerQty || 0}`}
                                           color="success"
                                           size="small"
-                                          sx={{ fontWeight: 500 }}
+                                          sx={{ fontWeight: 500 ,cursor: 'default',pointerEvents: 'none' }}
                                         />
                                       </Stack>
                                       <Stack direction="row" spacing={0.5}>
@@ -518,21 +518,21 @@ const OwnerShopList = () => {
                                           variant="outlined"
                                           color="primary"
                                           size="small"
-                                          sx={{ fontWeight: 500 }}
+                                          sx={{ fontWeight: 500 ,cursor: 'default',pointerEvents: 'none' }}
                                         />
                                         <Chip
                                           label={`Available L: ${item.availableLunchQty || 0}`}
                                           variant="outlined"
                                           color="secondary"
                                           size="small"
-                                          sx={{ fontWeight: 500 }}
+                                          sx={{ fontWeight: 500 ,cursor: 'default',pointerEvents: 'none' }}
                                         />
                                         <Chip
                                           label={`Available D: ${item.availableDinnerQty || 0}`}
                                           variant="outlined"
                                           color="success"
                                           size="small"
-                                          sx={{ fontWeight: 500 }}
+                                          sx={{ fontWeight: 500 ,cursor: 'default',pointerEvents: 'none' }}
                                         />
                                       </Stack>
                                     </Stack>

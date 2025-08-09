@@ -124,6 +124,8 @@ const MemoizedOrderCard = memo(({ order, onDeleteClick, onCancelClick, canDelete
             fontSize: 16,
             fontWeight: 700,
             letterSpacing: 1,
+            pointerEvents: 'none',
+            userSelect: 'none',
             ...(isBad && { border: `1.5px solid ${theme.palette.error.main}` })
           }}
         />
@@ -330,10 +332,10 @@ const UserOrders = () => {
         </Typography>
         {/* Order Stats Row */}
         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
-          <Chip icon={<TaskAltIcon sx={{ color: '#43a047' }} />} color="success" label={`Completed: ${countByStatus('completed')}`} sx={{ fontWeight:700 }}/>
-          <Chip icon={<PendingIcon sx={{ color: '#fb8c00' }} />} color="warning" label={`Pending: ${countByStatus('pending')}`} sx={{ fontWeight:700 }}/>
-          <Chip icon={<CancelIcon sx={{ color: '#e53935' }} />} color="error" label={`Rejected/Cancelled: ${countByStatus('rejected')+countByStatus('cancelled')+countByStatus('expired')}`} sx={{ fontWeight:700 }}/>
-          <Chip label={`Total: ${total}`} sx={{ fontWeight:700 }}/>
+          <Chip icon={<TaskAltIcon sx={{ color: '#43a047' }} />} color="success" label={`Completed: ${countByStatus('completed')}`} sx={{ fontWeight:700 , cursor: 'default',pointerEvents: 'none',userSelect: 'none'}}/>
+          <Chip icon={<PendingIcon sx={{ color: '#fb8c00' }} />} color="warning" label={`Pending: ${countByStatus('pending')}`} sx={{ fontWeight:700,cursor: 'default',pointerEvents: 'none',userSelect: 'none'}}/>
+          <Chip icon={<CancelIcon sx={{ color: '#e53935' }} />} color="error" label={`Rejected/Cancelled: ${countByStatus('rejected')+countByStatus('cancelled')+countByStatus('expired')}`} sx={{ fontWeight:700,cursor: 'default',pointerEvents: 'none' ,userSelect: 'none'}}/>
+          <Chip label={`Total: ${total}`} sx={{ fontWeight:700,cursor: 'default',pointerEvents: 'none',userSelect: 'none' }}/>
         </Box>
         {/* Search Orders */}
         <Paper

@@ -389,7 +389,9 @@ const OwnerOrders = () => {
                         sx={{ 
                           textTransform: 'capitalize',
                           fontSize: isMobile ? '0.7rem' : '0.75rem',
-                          height: isMobile ? 24 : 32
+                          height: isMobile ? 24 : 32,
+                          cursor: 'default',
+                          pointerEvents: 'none'
                         }} 
                       />
                     </Stack>
