@@ -10,7 +10,7 @@ import FreeBreakfastIcon from '@mui/icons-material/FreeBreakfast';
 import LunchDiningIcon from '@mui/icons-material/LunchDining';
 import DinnerDiningIcon from '@mui/icons-material/DinnerDining';
 
-const LOCATIONS = ['A', 'B', 'C', 'D'];
+const LOCATIONS = ['Coral beauty', 'Silvertips', 'Cattelya', 'Blue sapphire'];
 const TIME_SLOTS = [
   { value: 'Breakfast', label: 'Breakfast - 8.00 A.M' },
   { value: 'Lunch', label: 'Lunch - 12.00 P.M' },

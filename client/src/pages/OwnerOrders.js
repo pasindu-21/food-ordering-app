@@ -18,7 +18,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import { useTheme } from '@mui/material/styles';
 
 const timeSlots = ['Breakfast', 'Lunch', 'Dinner'];
-const locations = ['A', 'B', 'C', 'D'];
+const locations = ['Coral beauty', 'Silvertips', 'Cattelya ', 'Blue sapphire'];
 
 // Enhanced time slot display with better mobile formatting
 const TIME_SLOT_DISPLAY = {
@@ -231,7 +231,7 @@ const OwnerOrders = () => {
                           fontWeight={500}
                           sx={{ fontSize: isMobile ? '0.875rem' : '1rem' }}
                         >
-                          Location {loc}
+                           {loc}
                         </Typography>
                       </AccordionSummary>
                       <AccordionDetails sx={{ p: isMobile ? 0.5 : 1 }}>
