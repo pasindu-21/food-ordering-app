@@ -28,7 +28,8 @@ JavaScript (ES6+) – Core scripting language.
 
 React Router – For navigation and routing.
 
-Backend (if applicable):
+🧩 Technologies Used
+Backend:
 
 Node.js & Express.js – For handling API requests (if connected to a backend).
 
