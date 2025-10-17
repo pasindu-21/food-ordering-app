@@ -14,6 +14,7 @@ The *Food Ordering App* allows users to:
 - Place orders through an intuitive interface.
 - Costumer can have a give a shop reviews
 - Costemr can manage there profile
+  
 The application is designed with a focus on **responsive UI**, **clean architecture**, and **scalable backend integration**.
 
  🧩 Technologies Used
@@ -38,5 +39,7 @@ Tools & Dependencies:
 npm – Package management.
 
 💡 Future Improvements
+
 -Integrate a real payment gateway.
+
 -Implement admin panel for managing orders and menus.
