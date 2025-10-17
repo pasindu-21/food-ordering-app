@@ -9,10 +9,11 @@ This project demonstrates key concepts in full-stack web development using moder
 
 The *Food Ordering App* allows users to:
 - View available food items and details.
-- Add and remove items from the cart.
+- Add and remove items from the Shop.
 - View the total order amount dynamically.
 - Place orders through an intuitive interface.
-
+- Costumer can have a give a shop reviews
+- Costemr can manage there profile
 The application is designed with a focus on **responsive UI**, **clean architecture**, and **scalable backend integration**.
 
  🧩 Technologies Used
@@ -30,18 +31,12 @@ Backend (if applicable):
 
 Node.js & Express.js – For handling API requests (if connected to a backend).
 
-MongoDB / Firebase – For data storage (depending on your setup).
+MongoDB – For data storage (depending on your setup).
 
 Tools & Dependencies:
 
 npm – Package management.
 
-Git & GitHub – Version control and collaboration.
-
 💡 Future Improvements
-
-Add authentication and user profiles.
-
-Integrate a real payment gateway.
-
-Implement admin panel for managing orders and menus.
+-Integrate a real payment gateway.
+-Implement admin panel for managing orders and menus.
